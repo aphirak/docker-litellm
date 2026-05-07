@@ -120,6 +120,8 @@ This Docker image uses the following variables, that can be declared in an `env`
 | `LITELLM_GEMINI_API_KEY` | Google Gemini API key — auto-adds `gemini-2.0-flash` | *(not set)* |
 | `LITELLM_OLLAMA_BASE_URL` | Ollama base URL — auto-adds `ollama/llama3.2` | *(not set)* |
 | `LITELLM_DATABASE_URL` | PostgreSQL URL — enables virtual key management | *(not set)* |
+| `LITELLM_MCP_URL` | MCP Gateway endpoint URL — auto-wires MCP Gateway on every start | *(not set)* |
+| `LITELLM_MCP_API_KEY` | Bearer token for the MCP Gateway (required when `LITELLM_MCP_URL` is set) | *(not set)* |
 
 **Note:** In your `env` file, you may enclose values in single quotes, e.g. `VAR='value'`. Do not add spaces around `=`. If you change `LITELLM_PORT`, update the `-p` flag in the `docker run` command accordingly.
 
@@ -187,6 +189,42 @@ docker exec litellm litellm_manage --removemodel <model_id>
 ```bash
 docker exec litellm litellm_manage --showkey
 ```
+
+## MCP Gateway integration
+
+Set `LITELLM_MCP_URL` (and optionally `LITELLM_MCP_API_KEY`) in your `litellm.env` file to automatically wire LiteLLM to an MCP Gateway, so AI clients can call MCP tools directly through the LiteLLM proxy.
+
+When `LITELLM_MCP_URL` is set, an `mcp_servers:` block is injected into `config.yaml` on every container start — no manual YAML editing required.
+
+**Wire to an MCP Gateway:**
+
+```bash
+# In litellm.env:
+LITELLM_MCP_URL=http://mcp:3000/mcp
+LITELLM_MCP_API_KEY=mcp-xxxx...   # get with: docker exec mcp mcp_manage --showkey
+```
+
+After setting these values, restart the container:
+
+```bash
+docker compose restart litellm
+# or: docker restart litellm
+```
+
+**Manage MCP servers with `litellm_manage`:**
+
+```bash
+# List configured MCP servers
+docker exec litellm litellm_manage --listmcp
+
+# Add an MCP server manually
+docker exec litellm litellm_manage --addmcp my-gateway http://mcp:3000/mcp --key mcp-xxxx
+
+# Remove an MCP server
+docker exec litellm litellm_manage --removemcp my-gateway
+```
+
+**Note:** `--addmcp` and `--removemcp` write to `config.yaml` and automatically restart the proxy. MCP servers added via `LITELLM_MCP_URL` are named `docker_mcp_gateway` in the config and can be managed with `--removemcp docker_mcp_gateway`.
 
 ## Virtual key management
 

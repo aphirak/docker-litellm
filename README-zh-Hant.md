@@ -118,6 +118,8 @@ docker image tag quay.io/hwdsl2/litellm-server hwdsl2/litellm-server
 | `LITELLM_GEMINI_API_KEY` | Google Gemini API 金鑰 — 自動新增 `gemini-2.0-flash` | *(未設定)* |
 | `LITELLM_OLLAMA_BASE_URL` | Ollama 基礎 URL — 自動新增 `ollama/llama3.2` | *(未設定)* |
 | `LITELLM_DATABASE_URL` | PostgreSQL URL — 啟用虛擬金鑰管理 | *(未設定)* |
+| `LITELLM_MCP_URL` | MCP 閘道端點 URL — 每次啟動時自動接入 MCP 閘道 | *(未設定)* |
+| `LITELLM_MCP_API_KEY` | MCP 閘道的 Bearer 權杖（設定 `LITELLM_MCP_URL` 時必填） | *(未設定)* |
 
 **注：** 在 `env` 檔案中，可以用單引號括住變數值，例如 `VAR='值'`。不要在 `=` 兩側新增空格。如果更改了 `LITELLM_PORT`，請相應更新 `docker run` 命令中的 `-p` 參數。
 
@@ -185,6 +187,42 @@ docker exec litellm litellm_manage --removemodel <模型ID>
 ```bash
 docker exec litellm litellm_manage --showkey
 ```
+
+## MCP 閘道整合
+
+在 `litellm.env` 檔案中設定 `LITELLM_MCP_URL`（以及可選的 `LITELLM_MCP_API_KEY`），即可將 LiteLLM 自動接入 MCP 閘道，使 AI 用戶端能夠透過 LiteLLM 代理直接呼叫 MCP 工具。
+
+設定 `LITELLM_MCP_URL` 後，每次容器啟動時都會自動將 `mcp_servers:` 區塊注入 `config.yaml`，無需手動編輯 YAML 檔案。
+
+**接入 MCP 閘道：**
+
+```bash
+# 在 litellm.env 中：
+LITELLM_MCP_URL=http://mcp:3000/mcp
+LITELLM_MCP_API_KEY=mcp-xxxx...   # 透過以下命令取得：docker exec mcp mcp_manage --showkey
+```
+
+設定完成後，重新啟動容器：
+
+```bash
+docker compose restart litellm
+# 或：docker restart litellm
+```
+
+**使用 `litellm_manage` 管理 MCP 伺服器：**
+
+```bash
+# 列出已設定的 MCP 伺服器
+docker exec litellm litellm_manage --listmcp
+
+# 手動新增 MCP 伺服器
+docker exec litellm litellm_manage --addmcp my-gateway http://mcp:3000/mcp --key mcp-xxxx
+
+# 移除 MCP 伺服器
+docker exec litellm litellm_manage --removemcp my-gateway
+```
+
+**注：** `--addmcp` 和 `--removemcp` 會寫入 `config.yaml` 並自動重新啟動代理。透過 `LITELLM_MCP_URL` 新增的 MCP 伺服器在設定中命名為 `docker_mcp_gateway`，可使用 `--removemcp docker_mcp_gateway` 進行管理。
 
 ## 虛擬金鑰管理
 
