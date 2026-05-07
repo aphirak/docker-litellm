@@ -39,6 +39,12 @@ Options:
   --removemodel <model_id>             remove a model by its ID (restarts proxy)
   --showkey                            show the master API key
 
+  MCP server management:
+  --listmcp                            list configured MCP servers
+  --addmcp     <name> <url>            add an MCP server (restarts proxy)
+               [--key  <api_key>]      bearer token for the MCP server (if required)
+  --removemcp  <name>                  remove an MCP server by name (restarts proxy)
+
   Virtual key management (requires LITELLM_DATABASE_URL):
   --createkey                          create a new virtual key
                [--alias  <name>]       key alias / label (optional)
@@ -60,6 +66,9 @@ Examples:
   docker exec litellm litellm_manage --createkey --alias dev-key --models gpt-4o,claude-3-6-sonnet --budget 20.0
   docker exec litellm litellm_manage --listkeys
   docker exec litellm litellm_manage --deletekey sk-...
+  docker exec litellm litellm_manage --listmcp
+  docker exec litellm litellm_manage --addmcp my-gateway http://mcp:3000/mcp --key mcp-xxxx
+  docker exec litellm litellm_manage --removemcp my-gateway
 
 EOF
   exit "$exit_code"
@@ -142,6 +151,9 @@ parse_args() {
   create_key=0
   list_keys=0
   delete_key=0
+  list_mcp=0
+  add_mcp=0
+  remove_mcp=0
 
   model_provider=""
   model_key=""
@@ -152,6 +164,9 @@ parse_args() {
   key_budget=""
   key_expires=""
   key_to_delete=""
+  mcp_name=""
+  mcp_url=""
+  mcp_key=""
 
   while [ "$#" -gt 0 ]; do
     case "$1" in
@@ -186,8 +201,24 @@ parse_args() {
         key_to_delete="$2"
         shift; shift
         ;;
+      --listmcp)
+        list_mcp=1
+        shift
+        ;;
+      --addmcp)
+        add_mcp=1
+        mcp_name="$2"
+        mcp_url="$3"
+        shift; shift; shift
+        ;;
+      --removemcp)
+        remove_mcp=1
+        mcp_name="$2"
+        shift; shift
+        ;;
       --key)
         model_key="$2"
+        mcp_key="$2"
         shift; shift
         ;;
       --base-url)
@@ -222,7 +253,7 @@ parse_args() {
 
 check_args() {
   local action_count
-  action_count=$((list_models + add_model + remove_model + show_key + create_key + list_keys + delete_key))
+  action_count=$((list_models + add_model + remove_model + show_key + create_key + list_keys + delete_key + list_mcp + add_mcp + remove_mcp))
 
   if [ "$action_count" -eq 0 ]; then
     show_usage
@@ -244,6 +275,15 @@ check_args() {
 
   if [ "$delete_key" = 1 ] && [ -z "$key_to_delete" ]; then
     exiterr "Missing key. Usage: --deletekey <key>"
+  fi
+
+  if [ "$add_mcp" = 1 ]; then
+    [ -z "$mcp_name" ] && exiterr "Missing name. Usage: --addmcp <name> <url>"
+    [ -z "$mcp_url" ]  && exiterr "Missing url. Usage: --addmcp <name> <url>"
+  fi
+
+  if [ "$remove_mcp" = 1 ] && [ -z "$mcp_name" ]; then
+    exiterr "Missing name. Usage: --removemcp <name>"
   fi
 }
 
@@ -294,6 +334,103 @@ PYEOF
   echo
   echo "Model '${model_alias}' added successfully."
   echo "Use '--listmodels' to see all configured models after restart."
+  echo
+  _restart_proxy
+}
+
+do_list_mcp() {
+  echo
+  echo "Configured MCP servers:"
+  echo
+  [ -f "$CONFIG_FILE" ] || exiterr "Config file not found at ${CONFIG_FILE}. Has the container fully started?"
+  CONFIG_FILE="$CONFIG_FILE" python3 - << 'PYEOF'
+import yaml, os, sys
+cfg = os.environ['CONFIG_FILE']
+try:
+    with open(cfg) as f:
+        config = yaml.safe_load(f) or {}
+except OSError as e:
+    print(f"Error reading {cfg}: {e}", file=sys.stderr)
+    sys.exit(1)
+servers = config.get('mcp_servers', {})
+if not servers:
+    print("  (none)")
+else:
+    for name, entry in servers.items():
+        url = entry.get('url', '(no url)')
+        auth = entry.get('auth_type', 'none')
+        print(f"  {name}")
+        print(f"    url:       {url}")
+        print(f"    transport: {entry.get('transport', 'sse')}")
+        print(f"    auth_type: {auth}")
+PYEOF
+  echo
+}
+
+do_add_mcp() {
+  echo
+  echo "Adding MCP server '${mcp_name}' (${mcp_url})..."
+
+  [ -f "$CONFIG_FILE" ] || exiterr "Config file not found at ${CONFIG_FILE}. Has the container fully started?"
+
+  CONFIG_FILE="$CONFIG_FILE" _NAME="$mcp_name" _URL="$mcp_url" _KEY="${mcp_key:-}" \
+  python3 - << 'PYEOF' || exiterr "Failed to update ${CONFIG_FILE}."
+import yaml, os, sys
+cfg = os.environ['CONFIG_FILE']
+try:
+    with open(cfg) as f:
+        config = yaml.safe_load(f) or {}
+except OSError as e:
+    print(f"Error reading {cfg}: {e}", file=sys.stderr)
+    sys.exit(1)
+entry = {'url': os.environ['_URL'], 'transport': 'sse'}
+key = os.environ.get('_KEY', '')
+if key:
+    entry['auth_type'] = 'bearer_token'
+    entry['auth_value'] = key
+config.setdefault('mcp_servers', {})[os.environ['_NAME']] = entry
+with open(cfg, 'w') as f:
+    yaml.safe_dump(config, f, default_flow_style=False, allow_unicode=True)
+PYEOF
+
+  echo
+  echo "MCP server '${mcp_name}' added successfully."
+  echo
+  _restart_proxy
+}
+
+do_remove_mcp() {
+  echo
+  echo "Removing MCP server '${mcp_name}'..."
+
+  [ -f "$CONFIG_FILE" ] || exiterr "Config file not found at ${CONFIG_FILE}. Has the container fully started?"
+
+  CONFIG_FILE="$CONFIG_FILE" _NAME="$mcp_name" \
+  python3 - << 'PYEOF' || exiterr "Failed to update ${CONFIG_FILE}."
+import yaml, os, sys
+cfg = os.environ['CONFIG_FILE']
+try:
+    with open(cfg) as f:
+        config = yaml.safe_load(f) or {}
+except OSError as e:
+    print(f"Error reading {cfg}: {e}", file=sys.stderr)
+    sys.exit(1)
+servers = config.get('mcp_servers', {})
+name = os.environ['_NAME']
+if name not in servers:
+    print(f"Error: MCP server '{name}' not found in config.", file=sys.stderr)
+    sys.exit(1)
+del servers[name]
+if not servers:
+    config.pop('mcp_servers', None)
+else:
+    config['mcp_servers'] = servers
+with open(cfg, 'w') as f:
+    yaml.safe_dump(config, f, default_flow_style=False, allow_unicode=True)
+PYEOF
+
+  echo
+  echo "MCP server '${mcp_name}' removed."
   echo
   _restart_proxy
 }
@@ -442,6 +579,21 @@ fi
 
 if [ "$remove_model" = 1 ]; then
   do_remove_model
+  exit 0
+fi
+
+if [ "$list_mcp" = 1 ]; then
+  do_list_mcp
+  exit 0
+fi
+
+if [ "$add_mcp" = 1 ]; then
+  do_add_mcp
+  exit 0
+fi
+
+if [ "$remove_mcp" = 1 ]; then
+  do_remove_mcp
   exit 0
 fi
 

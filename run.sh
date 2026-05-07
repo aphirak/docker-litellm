@@ -67,6 +67,10 @@ LITELLM_DATABASE_URL=$(nospaces "$LITELLM_DATABASE_URL")
 LITELLM_DATABASE_URL=$(noquotes "$LITELLM_DATABASE_URL")
 LITELLM_HOST=$(nospaces "$LITELLM_HOST")
 LITELLM_HOST=$(noquotes "$LITELLM_HOST")
+LITELLM_MCP_URL=$(nospaces "$LITELLM_MCP_URL")
+LITELLM_MCP_URL=$(noquotes "$LITELLM_MCP_URL")
+LITELLM_MCP_API_KEY=$(nospaces "$LITELLM_MCP_API_KEY")
+LITELLM_MCP_API_KEY=$(noquotes "$LITELLM_MCP_API_KEY")
 
 # Apply defaults
 [ -z "$LITELLM_PORT" ]      && LITELLM_PORT=4000
@@ -218,6 +222,37 @@ litellm_settings:
   set_verbose: false
 EOF
   chmod 600 /etc/litellm/config.yaml
+fi
+
+# Inject or remove mcp_servers: block based on LITELLM_MCP_URL.
+# This runs on every start so the config always reflects the current env file.
+if [ -n "$LITELLM_MCP_URL" ]; then
+  _MCP_URL="$LITELLM_MCP_URL" _MCP_KEY="${LITELLM_MCP_API_KEY:-}" \
+  python3 - << 'PYEOF'
+import yaml, os
+cfg = '/etc/litellm/config.yaml'
+with open(cfg) as f:
+    config = yaml.safe_load(f) or {}
+entry = {'url': os.environ['_MCP_URL'], 'transport': 'sse'}
+key = os.environ.get('_MCP_KEY', '')
+if key:
+    entry['auth_type'] = 'bearer_token'
+    entry['auth_value'] = key
+config['mcp_servers'] = {'docker_mcp_gateway': entry}
+with open(cfg, 'w') as f:
+    yaml.safe_dump(config, f, default_flow_style=False, allow_unicode=True)
+PYEOF
+else
+  # Remove mcp_servers block if LITELLM_MCP_URL is unset
+  python3 - << 'PYEOF'
+import yaml
+cfg = '/etc/litellm/config.yaml'
+with open(cfg) as f:
+    config = yaml.safe_load(f) or {}
+config.pop('mcp_servers', None)
+with open(cfg, 'w') as f:
+    yaml.safe_dump(config, f, default_flow_style=False, allow_unicode=True)
+PYEOF
 fi
 
 # Detect first run before any initialization
