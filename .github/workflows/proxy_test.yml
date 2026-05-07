@@ -8,7 +8,7 @@ jobs:
     if: github.repository_owner == 'hwdsl2'
     strategy:
       matrix:
-        test_id: [no-env, with-env, with-master-key]
+        test_id: [no-env, with-env, with-master-key, with-mcp]
       fail-fast: false
     env:
       TEST_ID: ${{ matrix.test_id }}
@@ -53,6 +53,15 @@ jobs:
               --restart=always \
               -v litellm-test-data:/etc/litellm \
               -e LITELLM_MASTER_KEY=sk-test-master-key \
+              -p 4000:4000/tcp \
+              -d litellm-test
+          elif [ "$TEST_ID" = "with-mcp" ]; then
+            docker run \
+              --name "$TEST_ID" \
+              --restart=always \
+              -v litellm-test-data:/etc/litellm \
+              -e LITELLM_MCP_URL=http://127.0.0.1:9999/mcp \
+              -e LITELLM_MCP_API_KEY=test-mcp-key \
               -p 4000:4000/tcp \
               -d litellm-test
           fi
@@ -163,6 +172,24 @@ jobs:
 
           # Verify model was removed from config.yaml
           ! docker exec "$TEST_ID" grep -q 'ci-test-model' /etc/litellm/config.yaml
+
+          # MCP integration test: verify mcp_servers block in config.yaml
+          if [ "$TEST_ID" = "with-mcp" ]; then
+            docker exec "$TEST_ID" grep -q 'mcp_servers' /etc/litellm/config.yaml \
+              || { echo "mcp_servers block missing from config.yaml"; exit 1; }
+            docker exec "$TEST_ID" grep -q 'docker_mcp_gateway' /etc/litellm/config.yaml \
+              || { echo "docker_mcp_gateway entry missing"; exit 1; }
+            docker exec "$TEST_ID" grep -q 'http://127.0.0.1:9999/mcp' /etc/litellm/config.yaml \
+              || { echo "MCP URL not written to config.yaml"; exit 1; }
+            docker exec "$TEST_ID" grep -q 'bearer_token' /etc/litellm/config.yaml \
+              || { echo "auth_type bearer_token missing"; exit 1; }
+            docker exec "$TEST_ID" grep -q 'test-mcp-key' /etc/litellm/config.yaml \
+              || { echo "MCP API key not written to config.yaml"; exit 1; }
+            # Test --listmcp
+            docker exec "$TEST_ID" litellm_manage --listmcp
+            # Test --addmcp
+            docker exec "$TEST_ID" litellm_manage --addmcp ci-mcp http://127.0.0.1:8888/mcp --key ci-key || true
+          fi
 
           # Manual restart: test master key persistence
           docker restart "$TEST_ID"
