@@ -119,6 +119,7 @@ This Docker image uses the following variables, that can be declared in an `env`
 | `LITELLM_GROQ_API_KEY` | Groq API key — auto-adds `llama-3.3-70b` | *(not set)* |
 | `LITELLM_GEMINI_API_KEY` | Google Gemini API key — auto-adds `gemini-2.0-flash` | *(not set)* |
 | `LITELLM_OLLAMA_BASE_URL` | Ollama base URL — auto-adds `ollama/llama3.2` | *(not set)* |
+| `LITELLM_OLLAMA_API_KEY` | Ollama API key (auto-read from shared volume in [docker-ai-stack](https://github.com/hwdsl2/docker-ai-stack)) | *(not set)* |
 | `LITELLM_DATABASE_URL` | PostgreSQL URL — enables virtual key management | *(not set)* |
 | `LITELLM_MCP_URL` | MCP Gateway endpoint URL — auto-wires MCP Gateway on every start | *(not set)* |
 | `LITELLM_MCP_API_KEY` | Bearer token for the MCP Gateway (required when `LITELLM_MCP_URL` is set) | *(not set)* |
@@ -324,6 +325,7 @@ services:
 
 volumes:
   litellm-data:
+    name: litellm-data
 ```
 
 **Note:** For internet-facing deployments, using a [reverse proxy](#using-a-reverse-proxy) to add HTTPS is **strongly recommended**. In that case, also change `"4000:4000/tcp"` to `"127.0.0.1:4000:4000/tcp"` in `docker-compose.yml`, to prevent direct access to the unencrypted port.

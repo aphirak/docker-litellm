@@ -117,6 +117,7 @@ docker image tag quay.io/hwdsl2/litellm-server hwdsl2/litellm-server
 | `LITELLM_GROQ_API_KEY` | Groq API 密钥 — 自动添加 `llama-3.3-70b` | *(未设置)* |
 | `LITELLM_GEMINI_API_KEY` | Google Gemini API 密钥 — 自动添加 `gemini-2.0-flash` | *(未设置)* |
 | `LITELLM_OLLAMA_BASE_URL` | Ollama 基础 URL — 自动添加 `ollama/llama3.2` | *(未设置)* |
+| `LITELLM_OLLAMA_API_KEY` | Ollama API 密钥（在 [docker-ai-stack](https://github.com/hwdsl2/docker-ai-stack) 中通过共享卷自动读取） | *(未设置)* |
 | `LITELLM_DATABASE_URL` | PostgreSQL URL — 启用虚拟密钥管理 | *(未设置)* |
 | `LITELLM_MCP_URL` | MCP 网关端点 URL — 每次启动时自动接入 MCP 网关 | *(未设置)* |
 | `LITELLM_MCP_API_KEY` | MCP 网关的 Bearer 令牌（设置 `LITELLM_MCP_URL` 时必填） | *(未设置)* |
@@ -320,6 +321,7 @@ services:
 
 volumes:
   litellm-data:
+    name: litellm-data
 ```
 
 **注：** 如需面向互联网的部署，**强烈建议**使用[反向代理](#使用反向代理)来添加 HTTPS。此时，还应将 `docker-compose.yml` 中的 `"4000:4000/tcp"` 改为 `"127.0.0.1:4000:4000/tcp"`，以防止从外部直接访问未加密端口。

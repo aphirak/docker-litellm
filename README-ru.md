@@ -117,6 +117,7 @@ docker image tag quay.io/hwdsl2/litellm-server hwdsl2/litellm-server
 | `LITELLM_GROQ_API_KEY` | API-ключ Groq — автодобавляет `llama-3.3-70b` | *(не задано)* |
 | `LITELLM_GEMINI_API_KEY` | API-ключ Google Gemini — автодобавляет `gemini-2.0-flash` | *(не задано)* |
 | `LITELLM_OLLAMA_BASE_URL` | Базовый URL Ollama — автодобавляет `ollama/llama3.2` | *(не задано)* |
+| `LITELLM_OLLAMA_API_KEY` | API-ключ Ollama (автоматически считывается из общего тома в [docker-ai-stack](https://github.com/hwdsl2/docker-ai-stack)) | *(не задано)* |
 | `LITELLM_DATABASE_URL` | URL PostgreSQL — включает управление виртуальными ключами | *(не задано)* |
 | `LITELLM_MCP_URL` | URL конечной точки MCP Gateway — автоподключение к MCP Gateway при каждом запуске | *(не задано)* |
 | `LITELLM_MCP_API_KEY` | Bearer-токен для MCP Gateway (обязателен при установке `LITELLM_MCP_URL`) | *(не задано)* |
@@ -320,6 +321,7 @@ services:
 
 volumes:
   litellm-data:
+    name: litellm-data
 ```
 
 **Примечание:** Для развёртываний, доступных из интернета, **настоятельно рекомендуется** добавить HTTPS с помощью [обратного прокси](#использование-обратного-прокси). В этом случае также замените `"4000:4000/tcp"` на `"127.0.0.1:4000:4000/tcp"` в файле `docker-compose.yml`, чтобы исключить прямой доступ к незашифрованному порту извне.
