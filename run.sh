@@ -63,6 +63,8 @@ LITELLM_GEMINI_API_KEY=$(nospaces "$LITELLM_GEMINI_API_KEY")
 LITELLM_GEMINI_API_KEY=$(noquotes "$LITELLM_GEMINI_API_KEY")
 LITELLM_OLLAMA_BASE_URL=$(nospaces "$LITELLM_OLLAMA_BASE_URL")
 LITELLM_OLLAMA_BASE_URL=$(noquotes "$LITELLM_OLLAMA_BASE_URL")
+LITELLM_OLLAMA_API_KEY=$(nospaces "$LITELLM_OLLAMA_API_KEY")
+LITELLM_OLLAMA_API_KEY=$(noquotes "$LITELLM_OLLAMA_API_KEY")
 LITELLM_DATABASE_URL=$(nospaces "$LITELLM_DATABASE_URL")
 LITELLM_DATABASE_URL=$(noquotes "$LITELLM_DATABASE_URL")
 LITELLM_HOST=$(nospaces "$LITELLM_HOST")
@@ -170,6 +172,18 @@ if ! grep -q " /etc/litellm " /proc/mounts 2>/dev/null; then
   echo "Note: /etc/litellm is not mounted. Proxy data (master key, model"
   echo "      configurations) will be lost on container removal."
   echo "      Mount a Docker volume at /etc/litellm to persist data."
+fi
+
+# Auto-read API keys from shared volumes if mounted (used by docker-ai-stack)
+if [ -z "$LITELLM_OLLAMA_API_KEY" ] && grep -q " /var/lib/ollama-shared " /proc/mounts 2>/dev/null; then
+  if [ -f /var/lib/ollama-shared/.api_key ]; then
+    LITELLM_OLLAMA_API_KEY=$(cat /var/lib/ollama-shared/.api_key)
+  fi
+fi
+if [ -z "$LITELLM_MCP_API_KEY" ] && grep -q " /var/lib/mcp-shared " /proc/mounts 2>/dev/null; then
+  if [ -f /var/lib/mcp-shared/.api_key ]; then
+    LITELLM_MCP_API_KEY=$(cat /var/lib/mcp-shared/.api_key)
+  fi
 fi
 
 # Export provider API keys as standard environment variables for LiteLLM
@@ -299,7 +313,7 @@ if $first_run; then
 
   if [ -n "$LITELLM_OLLAMA_BASE_URL" ]; then
     echo "  Adding Ollama model (ollama/llama3.2)..."
-    add_model_to_config "ollama/llama3.2" "ollama/llama3.2" "" "$LITELLM_OLLAMA_BASE_URL"
+    add_model_to_config "ollama/llama3.2" "ollama/llama3.2" "$LITELLM_OLLAMA_API_KEY" "$LITELLM_OLLAMA_BASE_URL"
     added_models=$((added_models + 1))
   fi
 
