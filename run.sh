@@ -312,8 +312,8 @@ if $first_run; then
   fi
 
   if [ -n "$LITELLM_OLLAMA_BASE_URL" ]; then
-    echo "  Adding Ollama model (ollama/llama3.2)..."
-    add_model_to_config "ollama/llama3.2" "ollama/llama3.2" "$LITELLM_OLLAMA_API_KEY" "$LITELLM_OLLAMA_BASE_URL"
+    echo "  Adding Ollama model (ollama/llama3.2:3b)..."
+    add_model_to_config "ollama/llama3.2:3b" "ollama/llama3.2:3b" "$LITELLM_OLLAMA_API_KEY" "$LITELLM_OLLAMA_BASE_URL"
     added_models=$((added_models + 1))
   fi
 

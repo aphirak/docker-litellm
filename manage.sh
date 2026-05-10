@@ -60,7 +60,7 @@ Examples:
   docker exec litellm litellm_manage --listmodels
   docker exec litellm litellm_manage --addmodel openai/gpt-4o --key sk-...
   docker exec litellm litellm_manage --addmodel openai/gpt-4o --key sk-... --alias gpt-4o
-  docker exec litellm litellm_manage --addmodel ollama/llama3.2 --base-url http://host.docker.internal:11434
+  docker exec litellm litellm_manage --addmodel ollama/llama3.2:3b --base-url http://host.docker.internal:11434
   docker exec litellm litellm_manage --removemodel <model_id>
   docker exec litellm litellm_manage --showkey
   docker exec litellm litellm_manage --createkey --alias dev-key --models gpt-4o,claude-3-6-sonnet --budget 20.0
