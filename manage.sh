@@ -361,7 +361,7 @@ else:
         auth = entry.get('auth_type', 'none')
         print(f"  {name}")
         print(f"    url:       {url}")
-        print(f"    transport: {entry.get('transport', 'sse')}")
+        print(f"    transport: {entry.get('transport', 'http')}")
         print(f"    auth_type: {auth}")
 PYEOF
   echo
@@ -383,7 +383,7 @@ try:
 except OSError as e:
     print(f"Error reading {cfg}: {e}", file=sys.stderr)
     sys.exit(1)
-entry = {'url': os.environ['_URL'], 'transport': 'sse'}
+entry = {'url': os.environ['_URL'], 'transport': 'http'}
 key = os.environ.get('_KEY', '')
 if key:
     entry['auth_type'] = 'bearer_token'

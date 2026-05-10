@@ -247,7 +247,7 @@ import yaml, os
 cfg = '/etc/litellm/config.yaml'
 with open(cfg) as f:
     config = yaml.safe_load(f) or {}
-entry = {'url': os.environ['_MCP_URL'], 'transport': 'sse'}
+entry = {'url': os.environ['_MCP_URL'], 'transport': 'http'}
 key = os.environ.get('_MCP_KEY', '')
 if key:
     entry['auth_type'] = 'bearer_token'
