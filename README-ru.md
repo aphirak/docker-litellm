@@ -24,7 +24,7 @@ Docker-образ для запуска прокси-шлюза [LiteLLM](https:
 - VPN: [WireGuard](https://github.com/hwdsl2/docker-wireguard/blob/main/README-ru.md), [OpenVPN](https://github.com/hwdsl2/docker-openvpn/blob/main/README-ru.md), [IPsec VPN](https://github.com/hwdsl2/docker-ipsec-vpn-server/blob/master/README-ru.md), [Headscale](https://github.com/hwdsl2/docker-headscale/blob/main/README-ru.md)
 - Инструменты: [MCP Gateway](https://github.com/hwdsl2/docker-mcp-gateway/blob/main/README-ru.md)
 
-**Совет:** Whisper, Kokoro, Embeddings, LiteLLM, Ollama и MCP-шлюз можно [использовать совместно](#использование-с-другими-ai-сервисами) для построения полного self-hosted AI-стека на собственном сервере. См. [Docker AI Stack](https://github.com/hwdsl2/docker-ai-stack) — готовые конфигурации и примеры конвейеров.
+**Совет:** Whisper, Kokoro, Embeddings, LiteLLM, Ollama и MCP-шлюз можно [использовать совместно](#использование-с-другими-ai-сервисами) для построения полного self-hosted AI-стека на собственном сервере. Быстрый старт с [Docker AI Stack](https://github.com/hwdsl2/docker-ai-stack). Разверните полный стек одной командой.
 
 ## Быстрый старт
 
@@ -116,7 +116,7 @@ docker image tag quay.io/hwdsl2/litellm-server hwdsl2/litellm-server
 | `LITELLM_ANTHROPIC_API_KEY` | API-ключ Anthropic — автодобавляет `claude-3-6-sonnet` (latest) | *(не задано)* |
 | `LITELLM_GROQ_API_KEY` | API-ключ Groq — автодобавляет `llama-3.3-70b` | *(не задано)* |
 | `LITELLM_GEMINI_API_KEY` | API-ключ Google Gemini — автодобавляет `gemini-2.0-flash` | *(не задано)* |
-| `LITELLM_OLLAMA_BASE_URL` | Базовый URL Ollama — автодобавляет `ollama/llama3.2` | *(не задано)* |
+| `LITELLM_OLLAMA_BASE_URL` | Базовый URL Ollama — автодобавляет `ollama/llama3.2:3b` | *(не задано)* |
 | `LITELLM_OLLAMA_API_KEY` | API-ключ Ollama (автоматически считывается из общего тома в [docker-ai-stack](https://github.com/hwdsl2/docker-ai-stack)) | *(не задано)* |
 | `LITELLM_DATABASE_URL` | URL PostgreSQL — включает управление виртуальными ключами | *(не задано)* |
 | `LITELLM_MCP_URL` | URL конечной точки MCP Gateway — автоподключение к MCP Gateway при каждом запуске | *(не задано)* |
@@ -173,7 +173,7 @@ docker exec litellm litellm_manage --addmodel openai/gpt-4o --key sk-... --alias
 ```bash
 # Подключиться к Ollama, запущенному на хосте Docker
 docker exec litellm litellm_manage \
-  --addmodel ollama/llama3.2 \
+  --addmodel ollama/llama3.2:3b \
   --base-url http://host.docker.internal:11434
 ```
 
@@ -406,7 +406,7 @@ docker rm -f litellm
 | **[Ollama (LLM)](https://github.com/hwdsl2/docker-ollama/blob/main/README-ru.md)** | Запускает локальные LLM-модели (llama3, qwen, mistral и др.) | `11434` |
 | **[MCP-шлюз](https://github.com/hwdsl2/docker-mcp-gateway/blob/main/README-ru.md)** | Предоставляет сервисы ИИ как MCP-инструменты для ИИ-ассистентов (Claude, Cursor и др.) | `3000` |
 
-**См. также: [Docker AI Stack](https://github.com/hwdsl2/docker-ai-stack)** — готовые docker-compose конфигурации и примеры конвейеров. Узнайте больше о развёртывании полного AI-стека.
+**См. также: [Docker AI Stack](https://github.com/hwdsl2/docker-ai-stack)** — разверните полный стек одной командой, с готовыми конфигурациями и примерами конвейеров.
 
 ## Технические подробности
 

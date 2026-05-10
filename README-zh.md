@@ -24,7 +24,7 @@
 - VPN：[WireGuard](https://github.com/hwdsl2/docker-wireguard/blob/main/README-zh.md)、[OpenVPN](https://github.com/hwdsl2/docker-openvpn/blob/main/README-zh.md)、[IPsec VPN](https://github.com/hwdsl2/docker-ipsec-vpn-server/blob/master/README-zh.md)、[Headscale](https://github.com/hwdsl2/docker-headscale/blob/main/README-zh.md)
 - 工具：[MCP Gateway](https://github.com/hwdsl2/docker-mcp-gateway/blob/main/README-zh.md)
 
-**提示：** Whisper、Kokoro、Embeddings、LiteLLM、Ollama 和 MCP 网关可以[配合使用](#与其他-ai-服务配合使用)，在您自己的服务器上搭建完整的自托管 AI 系统。参见 [Docker AI Stack](https://github.com/hwdsl2/docker-ai-stack)，获取现成的配置和流水线示例。
+**提示：** Whisper、Kokoro、Embeddings、LiteLLM、Ollama 和 MCP 网关可以[配合使用](#与其他-ai-服务配合使用)，在您自己的服务器上搭建完整的自托管 AI 系统。使用 [Docker AI Stack](https://github.com/hwdsl2/docker-ai-stack) 快速开始，一条命令即可部署完整技术栈。
 
 ## 快速开始
 
@@ -116,7 +116,7 @@ docker image tag quay.io/hwdsl2/litellm-server hwdsl2/litellm-server
 | `LITELLM_ANTHROPIC_API_KEY` | Anthropic API 密钥 — 自动添加 `claude-3-6-sonnet`（最新版） | *(未设置)* |
 | `LITELLM_GROQ_API_KEY` | Groq API 密钥 — 自动添加 `llama-3.3-70b` | *(未设置)* |
 | `LITELLM_GEMINI_API_KEY` | Google Gemini API 密钥 — 自动添加 `gemini-2.0-flash` | *(未设置)* |
-| `LITELLM_OLLAMA_BASE_URL` | Ollama 基础 URL — 自动添加 `ollama/llama3.2` | *(未设置)* |
+| `LITELLM_OLLAMA_BASE_URL` | Ollama 基础 URL — 自动添加 `ollama/llama3.2:3b` | *(未设置)* |
 | `LITELLM_OLLAMA_API_KEY` | Ollama API 密钥（在 [docker-ai-stack](https://github.com/hwdsl2/docker-ai-stack) 中通过共享卷自动读取） | *(未设置)* |
 | `LITELLM_DATABASE_URL` | PostgreSQL URL — 启用虚拟密钥管理 | *(未设置)* |
 | `LITELLM_MCP_URL` | MCP 网关端点 URL — 每次启动时自动接入 MCP 网关 | *(未设置)* |
@@ -173,7 +173,7 @@ docker exec litellm litellm_manage --addmodel openai/gpt-4o --key sk-... --alias
 ```bash
 # 连接到 Docker 宿主机上运行的 Ollama
 docker exec litellm litellm_manage \
-  --addmodel ollama/llama3.2 \
+  --addmodel ollama/llama3.2:3b \
   --base-url http://host.docker.internal:11434
 ```
 
@@ -406,7 +406,7 @@ docker rm -f litellm
 | **[Ollama (LLM)](https://github.com/hwdsl2/docker-ollama/blob/main/README-zh.md)** | 运行本地 LLM 模型（llama3、qwen、mistral 等） | `11434` |
 | **[MCP 网关](https://github.com/hwdsl2/docker-mcp-gateway/blob/main/README-zh.md)** | 将 AI 服务作为 MCP 工具暴露给 AI 助手（Claude、Cursor 等） | `3000` |
 
-**另请参阅：[Docker AI Stack](https://github.com/hwdsl2/docker-ai-stack)** — 提供现成的 docker-compose 配置和流水线示例。了解更多关于完整 AI 技术栈的部署方法。
+**另请参阅：[Docker AI Stack](https://github.com/hwdsl2/docker-ai-stack)** — 一条命令即可部署完整技术栈，提供现成的配置和流水线示例。
 
 ## 技术细节
 

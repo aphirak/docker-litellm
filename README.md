@@ -24,7 +24,7 @@ Docker image to run a [LiteLLM](https://github.com/BerriAI/litellm) AI gateway p
 - VPN: [WireGuard](https://github.com/hwdsl2/docker-wireguard), [OpenVPN](https://github.com/hwdsl2/docker-openvpn), [IPsec VPN](https://github.com/hwdsl2/docker-ipsec-vpn-server), [Headscale](https://github.com/hwdsl2/docker-headscale)
 - Tools: [MCP Gateway](https://github.com/hwdsl2/docker-mcp-gateway)
 
-**Tip:** Whisper, Kokoro, Embeddings, LiteLLM, Ollama, and MCP Gateway can be [used together](#using-with-other-ai-services) to build a complete, self-hosted AI stack on your own server. See [Docker AI Stack](https://github.com/hwdsl2/docker-ai-stack) for ready-made configurations and pipeline examples.
+**Tip:** Whisper, Kokoro, Embeddings, LiteLLM, Ollama, and MCP Gateway can be [used together](#using-with-other-ai-services) to build a complete, self-hosted AI stack on your own server. Get started quickly with [Docker AI Stack](https://github.com/hwdsl2/docker-ai-stack). Deploy the full stack with a single command.
 
 ## Quick start
 
@@ -118,7 +118,7 @@ This Docker image uses the following variables, that can be declared in an `env`
 | `LITELLM_ANTHROPIC_API_KEY` | Anthropic API key — auto-adds `claude-3-6-sonnet` (latest) | *(not set)* |
 | `LITELLM_GROQ_API_KEY` | Groq API key — auto-adds `llama-3.3-70b` | *(not set)* |
 | `LITELLM_GEMINI_API_KEY` | Google Gemini API key — auto-adds `gemini-2.0-flash` | *(not set)* |
-| `LITELLM_OLLAMA_BASE_URL` | Ollama base URL — auto-adds `ollama/llama3.2` | *(not set)* |
+| `LITELLM_OLLAMA_BASE_URL` | Ollama base URL — auto-adds `ollama/llama3.2:3b` | *(not set)* |
 | `LITELLM_OLLAMA_API_KEY` | Ollama API key (auto-read from shared volume in [docker-ai-stack](https://github.com/hwdsl2/docker-ai-stack)) | *(not set)* |
 | `LITELLM_DATABASE_URL` | PostgreSQL URL — enables virtual key management | *(not set)* |
 | `LITELLM_MCP_URL` | MCP Gateway endpoint URL — auto-wires MCP Gateway on every start | *(not set)* |
@@ -175,7 +175,7 @@ docker exec litellm litellm_manage --addmodel openai/gpt-4o --key sk-... --alias
 ```bash
 # Connect to Ollama running on the Docker host
 docker exec litellm litellm_manage \
-  --addmodel ollama/llama3.2 \
+  --addmodel ollama/llama3.2:3b \
   --base-url http://host.docker.internal:11434
 ```
 
@@ -410,7 +410,7 @@ The [Whisper (STT)](https://github.com/hwdsl2/docker-whisper), [Embeddings](http
 | **[Ollama (LLM)](https://github.com/hwdsl2/docker-ollama)** | Runs local LLM models (llama3, qwen, mistral, etc.) | `11434` |
 | **[MCP Gateway](https://github.com/hwdsl2/docker-mcp-gateway)** | Exposes AI services as MCP tools for AI assistants (Claude, Cursor, etc.) | `3000` |
 
-**See also: [Docker AI Stack](https://github.com/hwdsl2/docker-ai-stack)** — ready-made docker-compose configurations and pipeline examples. Learn more about deploying the full AI stack.
+**See also: [Docker AI Stack](https://github.com/hwdsl2/docker-ai-stack)** — deploy the full stack with a single command, with ready-made configurations and pipeline examples.
 
 ## Technical details
 

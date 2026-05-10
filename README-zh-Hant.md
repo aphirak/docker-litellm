@@ -24,7 +24,7 @@
 - VPN：[WireGuard](https://github.com/hwdsl2/docker-wireguard/blob/main/README-zh-Hant.md)、[OpenVPN](https://github.com/hwdsl2/docker-openvpn/blob/main/README-zh-Hant.md)、[IPsec VPN](https://github.com/hwdsl2/docker-ipsec-vpn-server/blob/master/README-zh-Hant.md)、[Headscale](https://github.com/hwdsl2/docker-headscale/blob/main/README-zh-Hant.md)
 - 工具：[MCP Gateway](https://github.com/hwdsl2/docker-mcp-gateway/blob/main/README-zh-Hant.md)
 
-**提示：** Whisper、Kokoro、Embeddings、LiteLLM、Ollama 和 MCP 閘道可以[搭配使用](#與其他-ai-服務搭配使用)，在您自己的伺服器上建立完整的自託管 AI 系統。參見 [Docker AI Stack](https://github.com/hwdsl2/docker-ai-stack)，取得現成的設定和流水線範例。
+**提示：** Whisper、Kokoro、Embeddings、LiteLLM、Ollama 和 MCP 閘道可以[搭配使用](#與其他-ai-服務搭配使用)，在您自己的伺服器上建立完整的自託管 AI 系統。使用 [Docker AI Stack](https://github.com/hwdsl2/docker-ai-stack) 快速開始，一條命令即可部署完整技術堆疊。
 
 ## 快速開始
 
@@ -116,7 +116,7 @@ docker image tag quay.io/hwdsl2/litellm-server hwdsl2/litellm-server
 | `LITELLM_ANTHROPIC_API_KEY` | Anthropic API 金鑰 — 自動新增 `claude-3-6-sonnet`（最新版） | *(未設定)* |
 | `LITELLM_GROQ_API_KEY` | Groq API 金鑰 — 自動新增 `llama-3.3-70b` | *(未設定)* |
 | `LITELLM_GEMINI_API_KEY` | Google Gemini API 金鑰 — 自動新增 `gemini-2.0-flash` | *(未設定)* |
-| `LITELLM_OLLAMA_BASE_URL` | Ollama 基礎 URL — 自動新增 `ollama/llama3.2` | *(未設定)* |
+| `LITELLM_OLLAMA_BASE_URL` | Ollama 基礎 URL — 自動新增 `ollama/llama3.2:3b` | *(未設定)* |
 | `LITELLM_OLLAMA_API_KEY` | Ollama API 金鑰（在 [docker-ai-stack](https://github.com/hwdsl2/docker-ai-stack) 中透過共享卷自動讀取） | *(未設定)* |
 | `LITELLM_DATABASE_URL` | PostgreSQL URL — 啟用虛擬金鑰管理 | *(未設定)* |
 | `LITELLM_MCP_URL` | MCP 閘道端點 URL — 每次啟動時自動接入 MCP 閘道 | *(未設定)* |
@@ -173,7 +173,7 @@ docker exec litellm litellm_manage --addmodel openai/gpt-4o --key sk-... --alias
 ```bash
 # 連接到 Docker 主機上執行的 Ollama
 docker exec litellm litellm_manage \
-  --addmodel ollama/llama3.2 \
+  --addmodel ollama/llama3.2:3b \
   --base-url http://host.docker.internal:11434
 ```
 
@@ -406,7 +406,7 @@ docker rm -f litellm
 | **[Ollama (LLM)](https://github.com/hwdsl2/docker-ollama/blob/main/README-zh-Hant.md)** | 執行本地 LLM 模型（llama3、qwen、mistral 等） | `11434` |
 | **[MCP 閘道](https://github.com/hwdsl2/docker-mcp-gateway/blob/main/README-zh-Hant.md)** | 將 AI 服務作為 MCP 工具提供給 AI 助手（Claude、Cursor 等） | `3000` |
 
-**另請參閱：[Docker AI Stack](https://github.com/hwdsl2/docker-ai-stack)** — 提供現成的 docker-compose 設定和流水線範例。了解更多關於完整 AI 技術堆疊的部署方法。
+**另請參閱：[Docker AI Stack](https://github.com/hwdsl2/docker-ai-stack)** — 一條命令即可部署完整技術堆疊，提供現成的設定和流水線範例。
 
 ## 技術細節
 
