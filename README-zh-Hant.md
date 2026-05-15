@@ -13,7 +13,7 @@
 - **預設安全** — 首次啟動時自動產生主 API 金鑰；所有 API 請求均需此金鑰
 - 自動為環境檔案中設定的提供商 API 金鑰新增對應模型
 - 透過輔助腳本（`litellm_manage`）管理模型
-- 無需資料庫 — 模型設定以純 YAML 檔案形式儲存於 Docker 磁碟區中
+- `docker-compose.yml` 包含用於管理介面、虛擬金鑰管理和支出追蹤的 PostgreSQL 資料庫
 - OpenAI 相容 API — 只需修改一行設定，即可將任何 OpenAI SDK 或應用程式指向此代理
 - 支援 OpenAI、Anthropic、Groq、Gemini、Ollama 及 [100 個以上其他提供商](https://docs.litellm.ai/docs/providers)
 - 透過 [GitHub Actions](https://github.com/hwdsl2/docker-litellm/actions/workflows/main.yml) 自動建置和發布
@@ -188,7 +188,11 @@ docker exec litellm litellm_manage --removemodel <模型ID>
 **顯示主金鑰**（如需查詢）：
 
 ```bash
+# 完整輸出（包含端點資訊）
 docker exec litellm litellm_manage --showkey
+
+# 僅輸出金鑰（適用於腳本 — 不顯示 IP 或端點資訊）
+docker exec litellm litellm_manage --getkey
 ```
 
 ## MCP 閘道整合
@@ -229,7 +233,7 @@ docker exec litellm litellm_manage --removemcp my-gateway
 
 ## 虛擬金鑰管理
 
-虛擬金鑰是可頒發給使用者或應用程式的受限 API 金鑰。每個金鑰可以選擇性地限制可存取的模型、設定最大支出預算以及設定過期時間。虛擬金鑰需要 PostgreSQL 資料庫 —— 請在啟動容器前在 `env` 檔案中設定 `LITELLM_DATABASE_URL`。
+虛擬金鑰是可頒發給使用者或應用程式的受限 API 金鑰。每個金鑰可以選擇性地限制可存取的模型、設定最大支出預算以及設定過期時間。虛擬金鑰需要 PostgreSQL 資料庫，預設的 `docker-compose.yml` 中已包含此資料庫。
 
 **建立虛擬金鑰：**
 
@@ -311,19 +315,42 @@ docker logs litellm
 
 ```yaml
 services:
+  db:
+    image: postgres:18
+    container_name: litellm-db
+    restart: always
+    environment:
+      POSTGRES_USER: litellm
+      POSTGRES_PASSWORD: litellm
+      POSTGRES_DB: litellm
+    volumes:
+      - litellm-db:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U litellm"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   litellm:
     image: hwdsl2/litellm-server
     container_name: litellm
     restart: always
     ports:
       - "4000:4000/tcp"  # For a host-based reverse proxy, change to "127.0.0.1:4000:4000/tcp"
+    environment:
+      - LITELLM_DATABASE_URL=postgresql://litellm:litellm@db:5432/litellm
     volumes:
       - litellm-data:/etc/litellm
       - ./litellm.env:/litellm.env:ro
+    depends_on:
+      db:
+        condition: service_healthy
 
 volumes:
   litellm-data:
     name: litellm-data
+  litellm-db:
+    name: litellm-db
 ```
 
 **注：** 如需面向網際網路的部署，**強烈建議**使用[反向代理](#使用反向代理)來新增 HTTPS。此時，還應將 `docker-compose.yml` 中的 `"4000:4000/tcp"` 改為 `"127.0.0.1:4000:4000/tcp"`，以防止從外部直接存取未加密連接埠。
@@ -419,7 +446,7 @@ Whisper (STT)、Embeddings、LiteLLM、Kokoro (TTS)、Ollama (LLM)、Docling 和
 - 資料目錄：`/etc/litellm`（Docker 磁碟區）
 - 模型儲存：磁碟區內的 `config.yaml` —— 首次啟動時建立，重啟後保留
 - 代理管理 REST API：與代理執行在同一連接埠
-- 內建 UI：可透過 `http://<伺服器>:<連接埠>/ui` 存取
+- 內建 UI：可透過 `http://<伺服器>:<連接埠>/ui` 存取 — 使用使用者名稱 `admin` 和您的主金鑰作為密碼登入
 
 ## 授權條款
 

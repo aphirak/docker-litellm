@@ -13,7 +13,7 @@ Docker image to run a [LiteLLM](https://github.com/BerriAI/litellm) AI gateway p
 - **Secure by default** — automatically generates a master API key on first start; all API requests require this key
 - Auto-adds models for any provider API keys set in the env file
 - Model management via a helper script (`litellm_manage`)
-- No database required — models are stored in a plain YAML file on the Docker volume
+- The `docker-compose.yml` includes a PostgreSQL database for the Admin UI, virtual key management, and spend tracking
 - OpenAI-compatible API — point any OpenAI SDK or app at your proxy with a one-line change
 - Supports OpenAI, Anthropic, Groq, Gemini, Ollama, and [100+ other providers](https://docs.litellm.ai/docs/providers)
 - Automatically built and published via [GitHub Actions](https://github.com/hwdsl2/docker-litellm/actions/workflows/main.yml)
@@ -190,7 +190,11 @@ docker exec litellm litellm_manage --removemodel <model_id>
 **Show the master key** (if you need to look it up):
 
 ```bash
+# Full output with endpoint info
 docker exec litellm litellm_manage --showkey
+
+# Key only (for scripting — no IP or endpoint info displayed)
+docker exec litellm litellm_manage --getkey
 ```
 
 ## MCP Gateway integration
@@ -231,7 +235,7 @@ docker exec litellm litellm_manage --removemcp my-gateway
 
 ## Virtual key management
 
-Virtual keys are scoped API keys you can issue to users or applications. Each key can optionally restrict which models it may access, set a maximum spend budget, and have an expiry. Virtual keys require a PostgreSQL database — set `LITELLM_DATABASE_URL` in your `env` file before starting the container.
+Virtual keys are scoped API keys you can issue to users or applications. Each key can optionally restrict which models it may access, set a maximum spend budget, and have an expiry. Virtual keys require a PostgreSQL database, which is included in the default `docker-compose.yml`.
 
 **Create a virtual key:**
 
@@ -315,19 +319,42 @@ Example `docker-compose.yml` (already included):
 
 ```yaml
 services:
+  db:
+    image: postgres:18
+    container_name: litellm-db
+    restart: always
+    environment:
+      POSTGRES_USER: litellm
+      POSTGRES_PASSWORD: litellm
+      POSTGRES_DB: litellm
+    volumes:
+      - litellm-db:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U litellm"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   litellm:
     image: hwdsl2/litellm-server
     container_name: litellm
     restart: always
     ports:
       - "4000:4000/tcp"  # For a host-based reverse proxy, change to "127.0.0.1:4000:4000/tcp"
+    environment:
+      - LITELLM_DATABASE_URL=postgresql://litellm:litellm@db:5432/litellm
     volumes:
       - litellm-data:/etc/litellm
       - ./litellm.env:/litellm.env:ro
+    depends_on:
+      db:
+        condition: service_healthy
 
 volumes:
   litellm-data:
     name: litellm-data
+  litellm-db:
+    name: litellm-db
 ```
 
 **Note:** For internet-facing deployments, using a [reverse proxy](#using-a-reverse-proxy) to add HTTPS is **strongly recommended**. In that case, also change `"4000:4000/tcp"` to `"127.0.0.1:4000:4000/tcp"` in `docker-compose.yml`, to prevent direct access to the unencrypted port.
@@ -423,7 +450,7 @@ The Whisper (STT), Embeddings, LiteLLM, Kokoro (TTS), Ollama (LLM), Docling, and
 - Data directory: `/etc/litellm` (Docker volume)
 - Model storage: `config.yaml` inside the volume — created on first start, preserved on restarts
 - Proxy management REST API: runs on the same port as the proxy
-- Built-in UI: available at `http://<server>:<port>/ui`
+- Built-in UI: available at `http://<server>:<port>/ui` — log in with username `admin` and your master key as the password
 
 ## License
 

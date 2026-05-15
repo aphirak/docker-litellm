@@ -13,7 +13,7 @@ Docker-образ для запуска прокси-шлюза [LiteLLM](https:
 - **Безопасность по умолчанию** — автоматически генерирует мастер-ключ API при первом запуске; все API-запросы требуют этот ключ
 - Автоматически добавляет модели для провайдеров, ключи которых заданы в env-файле
 - Управление моделями через вспомогательный скрипт (`litellm_manage`)
-- База данных не требуется — модели хранятся в обычном YAML-файле на Docker-томе
+- `docker-compose.yml` включает базу данных PostgreSQL для панели администратора, управления виртуальными ключами и отслеживания расходов
 - OpenAI-совместимый API — достаточно изменить одну строку, чтобы направить любое приложение или SDK на этот прокси
 - Поддерживает OpenAI, Anthropic, Groq, Gemini, Ollama и [100+ других провайдеров](https://docs.litellm.ai/docs/providers)
 - Автоматически собирается и публикуется через [GitHub Actions](https://github.com/hwdsl2/docker-litellm/actions/workflows/main.yml)
@@ -188,7 +188,11 @@ docker exec litellm litellm_manage --removemodel <model_id>
 **Показать мастер-ключ** (если нужно его найти):
 
 ```bash
+# Полный вывод с информацией об эндпоинте
 docker exec litellm litellm_manage --showkey
+
+# Только ключ (для скриптов — без IP и информации об эндпоинте)
+docker exec litellm litellm_manage --getkey
 ```
 
 ## Интеграция с MCP Gateway
@@ -229,7 +233,7 @@ docker exec litellm litellm_manage --removemcp my-gateway
 
 ## Управление виртуальными ключами
 
-Виртуальные ключи — это ограниченные API-ключи, которые можно выдавать пользователям или приложениям. Каждый ключ может опционально ограничивать доступные модели, устанавливать максимальный бюджет расходов и срок действия. Виртуальные ключи требуют базы данных PostgreSQL — задайте `LITELLM_DATABASE_URL` в файле `env` перед запуском контейнера.
+Виртуальные ключи — это ограниченные API-ключи, которые можно выдавать пользователям или приложениям. Каждый ключ может опционально ограничивать доступные модели, устанавливать максимальный бюджет расходов и срок действия. Виртуальные ключи требуют базы данных PostgreSQL, которая включена в стандартный `docker-compose.yml`.
 
 **Создать виртуальный ключ:**
 
@@ -311,19 +315,42 @@ docker logs litellm
 
 ```yaml
 services:
+  db:
+    image: postgres:18
+    container_name: litellm-db
+    restart: always
+    environment:
+      POSTGRES_USER: litellm
+      POSTGRES_PASSWORD: litellm
+      POSTGRES_DB: litellm
+    volumes:
+      - litellm-db:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U litellm"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   litellm:
     image: hwdsl2/litellm-server
     container_name: litellm
     restart: always
     ports:
       - "4000:4000/tcp"  # For a host-based reverse proxy, change to "127.0.0.1:4000:4000/tcp"
+    environment:
+      - LITELLM_DATABASE_URL=postgresql://litellm:litellm@db:5432/litellm
     volumes:
       - litellm-data:/etc/litellm
       - ./litellm.env:/litellm.env:ro
+    depends_on:
+      db:
+        condition: service_healthy
 
 volumes:
   litellm-data:
     name: litellm-data
+  litellm-db:
+    name: litellm-db
 ```
 
 **Примечание:** Для развёртываний, доступных из интернета, **настоятельно рекомендуется** добавить HTTPS с помощью [обратного прокси](#использование-обратного-прокси). В этом случае также замените `"4000:4000/tcp"` на `"127.0.0.1:4000:4000/tcp"` в файле `docker-compose.yml`, чтобы исключить прямой доступ к незашифрованному порту извне.
@@ -419,7 +446,7 @@ docker rm -f litellm
 - Директория данных: `/etc/litellm` (Docker-том)
 - Хранение моделей: `config.yaml` внутри тома — создаётся при первом запуске, сохраняется при перезапусках
 - REST API управления прокси: работает на том же порту, что и прокси
-- Встроенный UI: доступен по адресу `http://<сервер>:<порт>/ui`
+- Встроенный UI: доступен по адресу `http://<сервер>:<порт>/ui` — войдите с именем пользователя `admin` и вашим мастер-ключом в качестве пароля
 
 ## Лицензия
 
