@@ -8,7 +8,7 @@ services:
       POSTGRES_PASSWORD: litellm
       POSTGRES_DB: litellm
     volumes:
-      - litellm-db:/var/lib/postgresql/data
+      - litellm-db:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U litellm"]
       interval: 5s
