@@ -141,6 +141,7 @@ jobs:
 
           # Test litellm_manage commands
           docker exec "$TEST_ID" litellm_manage --showkey
+          docker exec "$TEST_ID" litellm_manage --getkey
           docker exec "$TEST_ID" litellm_manage --listmodels
 
           # Test --addmodel: writes to config.yaml and auto-restarts proxy via kill -TERM 1
