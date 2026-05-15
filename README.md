@@ -300,7 +300,6 @@ All proxy data is stored in the Docker volume (`/etc/litellm` inside the contain
 ├── config.yaml       # Proxy configuration and model list (created once, preserved across restarts)
 ├── .master_key       # Master API key (auto-generated, or synced from LITELLM_MASTER_KEY)
 ├── .initialized      # First-run marker
-├── .server_addr      # Cached server hostname or IP (used by litellm_manage --showkey)
 └── .db_configured    # Present when LITELLM_DATABASE_URL is set (used by litellm_manage)
 ```
 

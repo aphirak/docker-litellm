@@ -296,7 +296,6 @@ print(response.choices[0].message.content)
 ├── config.yaml       # Конфигурация прокси и список моделей (создаётся один раз, сохраняется при перезапуске)
 ├── .master_key       # Мастер-ключ API (автосгенерированный или синхронизированный из LITELLM_MASTER_KEY)
 ├── .initialized      # Маркер первого запуска
-├── .server_addr      # Кэшированное имя хоста или IP сервера (используется litellm_manage --showkey)
 └── .db_configured    # Присутствует, когда задан LITELLM_DATABASE_URL (используется litellm_manage)
 ```
 

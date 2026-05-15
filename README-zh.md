@@ -296,7 +296,6 @@ print(response.choices[0].message.content)
 ├── config.yaml       # 代理配置和模型列表（创建一次，重启后保留）
 ├── .master_key       # 主 API 密钥（自动生成，或从 LITELLM_MASTER_KEY 同步）
 ├── .initialized      # 首次运行标记
-├── .server_addr      # 缓存的服务器主机名或 IP（供 litellm_manage --showkey 使用）
 └── .db_configured    # 设置了 LITELLM_DATABASE_URL 时存在（供 litellm_manage 使用）
 ```
 
