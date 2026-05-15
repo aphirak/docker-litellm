@@ -13,7 +13,6 @@ LITELLM_DATA="/etc/litellm"
 MASTER_KEY_FILE="${LITELLM_DATA}/.master_key"
 PORT_FILE="${LITELLM_DATA}/.port"
 CONFIG_FILE="${LITELLM_DATA}/config.yaml"
-SERVER_ADDR_FILE="${LITELLM_DATA}/.server_addr"
 DB_CONFIGURED_MARKER="${LITELLM_DATA}/.db_configured"
 
 exiterr() { echo "Error: $1" >&2; exit 1; }
@@ -38,6 +37,7 @@ Options:
                [--alias  <name>]       display name for the model (optional)
   --removemodel <model_id>             remove a model by its ID (restarts proxy)
   --showkey                            show the master API key
+  --getkey                             output the master API key (machine-readable, no decoration)
 
   MCP server management:
   --listmcp                            list configured MCP servers
@@ -101,13 +101,6 @@ load_config() {
     fi
   fi
 
-  # Load server address
-  if [ -f "$SERVER_ADDR_FILE" ]; then
-    SERVER_ADDR=$(cat "$SERVER_ADDR_FILE")
-  else
-    SERVER_ADDR="<server ip>"
-  fi
-
   API_BASE="http://127.0.0.1:${LITELLM_PORT}"
 }
 
@@ -148,6 +141,7 @@ parse_args() {
   add_model=0
   remove_model=0
   show_key=0
+  get_key=0
   create_key=0
   list_keys=0
   delete_key=0
@@ -186,6 +180,10 @@ parse_args() {
         ;;
       --showkey)
         show_key=1
+        shift
+        ;;
+      --getkey)
+        get_key=1
         shift
         ;;
       --createkey)
@@ -253,7 +251,7 @@ parse_args() {
 
 check_args() {
   local action_count
-  action_count=$((list_models + add_model + remove_model + show_key + create_key + list_keys + delete_key + list_mcp + add_mcp + remove_mcp))
+  action_count=$((list_models + add_model + remove_model + show_key + get_key + create_key + list_keys + delete_key + list_mcp + add_mcp + remove_mcp))
 
   if [ "$action_count" -eq 0 ]; then
     show_usage
@@ -485,9 +483,16 @@ do_show_key() {
   echo " ${LITELLM_MASTER_KEY}"
   echo "==========================================================="
   echo
-  echo "Proxy endpoint:  http://${SERVER_ADDR}:${LITELLM_PORT}"
-  echo "Proxy UI:        http://${SERVER_ADDR}:${LITELLM_PORT}/ui"
+  echo "Proxy endpoint:  http://<server-ip>:${LITELLM_PORT}"
+  echo "Proxy UI:        http://<server-ip>:${LITELLM_PORT}/ui"
   echo
+}
+
+do_get_key() {
+  if [ -z "$LITELLM_MASTER_KEY" ]; then
+    exit 1
+  fi
+  printf '%s' "$LITELLM_MASTER_KEY"
 }
 
 do_create_key() {
@@ -569,6 +574,10 @@ check_args
 # Operations that do not require the proxy to be running
 if [ "$show_key" = 1 ]; then
   do_show_key
+  exit 0
+fi
+if [ "$get_key" = 1 ]; then
+  do_get_key
   exit 0
 fi
 

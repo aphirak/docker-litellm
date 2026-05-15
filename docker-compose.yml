@@ -1,14 +1,37 @@
 services:
+  db:
+    image: postgres:18
+    container_name: litellm-db
+    restart: always
+    environment:
+      POSTGRES_USER: litellm
+      POSTGRES_PASSWORD: litellm
+      POSTGRES_DB: litellm
+    volumes:
+      - litellm-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U litellm"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   litellm:
     image: hwdsl2/litellm-server
     container_name: litellm
     restart: always
     ports:
       - "4000:4000/tcp"  # For a host-based reverse proxy, change to "127.0.0.1:4000:4000/tcp"
+    environment:
+      - LITELLM_DATABASE_URL=postgresql://litellm:litellm@db:5432/litellm
     volumes:
       - litellm-data:/etc/litellm
       - ./litellm.env:/litellm.env:ro
+    depends_on:
+      db:
+        condition: service_healthy
 
 volumes:
   litellm-data:
     name: litellm-data
+  litellm-db:
+    name: litellm-db

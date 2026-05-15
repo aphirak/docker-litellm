@@ -144,7 +144,7 @@ else
   if check_ip "$public_ip"; then
     server_addr="$public_ip"
   else
-    server_addr="<server ip>"
+    server_addr="<server-ip>"
   fi
 fi
 printf '%s' "$server_addr" > "$SERVER_ADDR_FILE"
@@ -156,13 +156,6 @@ echo "LiteLLM Docker - https://github.com/hwdsl2/docker-litellm"
 if [ -n "$LITELLM_DATABASE_URL" ]; then
   export DATABASE_URL="$LITELLM_DATABASE_URL"
   touch "$DB_CONFIGURED_MARKER"
-  echo
-  echo "Applying database schema..."
-  LITELLM_SCHEMA=$(/opt/venv/bin/python3 -c \
-    'import litellm, os; print(os.path.join(os.path.dirname(litellm.__file__), "proxy", "schema.prisma"))')
-  if ! prisma db push --schema "$LITELLM_SCHEMA" --skip-generate 2>&1; then
-    echo "Warning: Failed to apply database schema. Virtual key management may not work." >&2
-  fi
 else
   rm -f "$DB_CONFIGURED_MARKER"
 fi
@@ -347,7 +340,7 @@ LITELLM_PID=$!
 # Wait for LiteLLM to become ready (up to 60 seconds)
 wait_for_server() {
   local i=0
-  while [ "$i" -lt 60 ]; do
+  while [ "$i" -lt 600 ]; do
     if ! kill -0 "$LITELLM_PID" 2>/dev/null; then
       return 1
     fi
@@ -365,7 +358,7 @@ if ! wait_for_server; then
   if ! kill -0 "$LITELLM_PID" 2>/dev/null; then
     echo "Error: LiteLLM failed to start. Check the container logs for details." >&2
   else
-    echo "Error: LiteLLM did not become ready after 60 seconds." >&2
+    echo "Error: LiteLLM did not become ready after 600 seconds." >&2
     kill "$LITELLM_PID" 2>/dev/null
   fi
   exit 1
