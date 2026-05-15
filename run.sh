@@ -109,7 +109,6 @@ mkdir -p /etc/litellm
 
 MASTER_KEY_FILE="/etc/litellm/.master_key"
 PORT_FILE="/etc/litellm/.port"
-SERVER_ADDR_FILE="/etc/litellm/.server_addr"
 INITIALIZED_MARKER="/etc/litellm/.initialized"
 DB_CONFIGURED_MARKER="/etc/litellm/.db_configured"
 
@@ -147,8 +146,6 @@ else
     server_addr="<server-ip>"
   fi
 fi
-printf '%s' "$server_addr" > "$SERVER_ADDR_FILE"
-
 echo
 echo "LiteLLM Docker - https://github.com/hwdsl2/docker-litellm"
 
@@ -337,7 +334,7 @@ litellm --config /etc/litellm/config.yaml \
   --host 0.0.0.0 &
 LITELLM_PID=$!
 
-# Wait for LiteLLM to become ready (up to 60 seconds)
+# Wait for LiteLLM to become ready
 wait_for_server() {
   local i=0
   while [ "$i" -lt 600 ]; do
