@@ -371,9 +371,9 @@ fi
 if $first_run; then
   echo
   echo "==========================================================="
-  echo " LiteLLM proxy master key"
+  echo "LiteLLM proxy master key"
   echo "==========================================================="
-  echo " ${master_key}"
+  echo "${master_key}"
   echo "==========================================================="
   echo
   echo "Proxy endpoint: http://${server_addr}:${LITELLM_PORT}"

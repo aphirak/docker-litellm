@@ -478,9 +478,9 @@ _restart_proxy() {
 do_show_key() {
   echo
   echo "==========================================================="
-  echo " LiteLLM proxy master key"
+  echo "LiteLLM proxy master key"
   echo "==========================================================="
-  echo " ${LITELLM_MASTER_KEY}"
+  echo "${LITELLM_MASTER_KEY}"
   echo "==========================================================="
   echo
   echo "Proxy endpoint:  http://<server-ip>:${LITELLM_PORT}"
