@@ -364,7 +364,7 @@ fi
 # Copy master key to shared volume if mounted (used by docker-ai-stack)
 if grep -q " /var/lib/litellm-shared " /proc/mounts 2>/dev/null; then
   cp "$MASTER_KEY_FILE" /var/lib/litellm-shared/.api_key
-  chmod 600 /var/lib/litellm-shared/.api_key
+  chmod 644 /var/lib/litellm-shared/.api_key
 fi
 
 # First-run: display summary once the proxy is confirmed ready
