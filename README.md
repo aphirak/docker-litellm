@@ -30,7 +30,7 @@ Docker image to run a [LiteLLM](https://github.com/BerriAI/litellm) AI gateway p
 
 ## Community
 
-- Subscribe for project updates: [Self-Hosted Stack](https://selfhostedstack.beehiiv.com/subscribe?utm_campaign=ai)
+- Subscribe for project updates (1–2 emails/month): [Self-Hosted Stack](https://selfhostedstack.beehiiv.com/subscribe?utm_campaign=ai)
 - Community discussions and showcases: [r/selfhostedstack](https://www.reddit.com/r/selfhostedstack/)
 
 ## Quick start
