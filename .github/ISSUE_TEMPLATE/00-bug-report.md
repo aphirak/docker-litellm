@@ -1,0 +1,71 @@
+---
+name: Bug report
+about: Tell us about a problem you are experiencing
+title: ''
+labels: ''
+assignees: ''
+
+---
+**Checklist**
+
+- [ ] I read the [README](https://github.com/hwdsl2/docker-litellm/blob/main/README.md) or the relevant section
+- [ ] I searched existing [Issues](https://github.com/hwdsl2/docker-litellm/issues?q=is%3Aissue)
+- [ ] This issue is about the LiteLLM Docker image/config/API, not only LiteLLM itself
+
+<!---
+If you found a reproducible bug in the upstream project itself, consider opening an issue upstream: [LiteLLM](https://github.com/BerriAI/litellm).
+--->
+
+**Describe the issue**
+A clear and concise description of the problem.
+
+**Deployment context**
+- [ ] Standalone container
+- [ ] Part of [docker-ai-stack](https://github.com/hwdsl2/docker-ai-stack)
+
+**To Reproduce**
+Steps to reproduce the behavior:
+
+1. ...
+2. ...
+
+**Expected behavior**
+A clear and concise description of what you expected to happen.
+
+**Environment**
+- Docker host OS: [e.g. Ubuntu 24.04]
+- Hosting provider (if applicable): [e.g. AWS, GCP, home server]
+- CPU architecture: [e.g. amd64, arm64]
+- Image/tag: [e.g. `hwdsl2/litellm-server:latest`]
+- Start method: [docker run / docker compose / other]
+- Published port(s): [4000]
+
+**Configuration**
+Remove secrets, API keys, tokens and private URLs before posting.
+
+- Env file or variables changed: [litellm.env / `-e` / compose `environment`]
+- Docker run or compose changes:
+
+**Service details**
+- Provider or local Ollama model involved:
+- Model management command output, if relevant:
+- Other management command output, if relevant (for example `docker exec litellm litellm_manage --showkey`):
+- Admin UI, virtual key, database, or master key behavior, if relevant:
+- MCP Gateway integration details, if relevant:
+- Request endpoint and sanitized request/response details:
+
+**Logs**
+Add relevant logs with secrets removed.
+
+```bash
+docker logs litellm
+```
+
+If using Docker Compose, you can also include:
+
+```bash
+docker compose logs litellm
+```
+
+**Additional context**
+Add any other context about the problem here.
