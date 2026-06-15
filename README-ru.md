@@ -4,7 +4,7 @@
 
 [![Build Status](https://github.com/hwdsl2/docker-litellm/actions/workflows/main.yml/badge.svg)](https://github.com/hwdsl2/docker-litellm/actions/workflows/main.yml) &nbsp;[![Docker Pulls](https://raw.githubusercontent.com/hwdsl2/badges/main/img/docker-pulls-litellm-server.svg)](https://hub.docker.com/r/hwdsl2/litellm-server) &nbsp;[![License: MIT](docs/images/license.svg)](https://opensource.org/licenses/MIT)
 
-Часть [Docker AI Stack](https://github.com/hwdsl2/docker-ai-stack/blob/main/README-ru.md) — разверните полный самостоятельно размещённый AI-стек одной командой.
+Часть [Self-Hosted AI Stack](https://github.com/hwdsl2/self-hosted-ai-stack/blob/main/README-ru.md) — разверните полный самостоятельно размещённый AI-стек одной командой.
 
 Docker-образ для запуска прокси-шлюза [LiteLLM](https://github.com/BerriAI/litellm). Обеспечивает единую точку доступа через OpenAI-совместимый API для более чем 100 провайдеров больших языковых моделей (LLM). Основан на Debian (python:3.12-slim). Прост в использовании, приватен и самостоятельно размещаем.
 
@@ -22,7 +22,7 @@ Docker-образ для запуска прокси-шлюза [LiteLLM](https:
 
 **Также доступно:**
 
-- AI-стек: [Docker AI Stack](https://github.com/hwdsl2/docker-ai-stack/blob/main/README-ru.md)
+- AI-стек: [Self-Hosted AI Stack](https://github.com/hwdsl2/self-hosted-ai-stack/blob/main/README-ru.md)
 - Связанные AI-сервисы: [Whisper (STT)](https://github.com/hwdsl2/docker-whisper/blob/main/README-ru.md), [Kokoro (TTS)](https://github.com/hwdsl2/docker-kokoro/blob/main/README-ru.md), [Embeddings](https://github.com/hwdsl2/docker-embeddings/blob/main/README-ru.md), [Ollama (LLM)](https://github.com/hwdsl2/docker-ollama/blob/main/README-ru.md), [Docling](https://github.com/hwdsl2/docker-docling/blob/main/README-ru.md), [MCP Gateway](https://github.com/hwdsl2/docker-mcp-gateway/blob/main/README-ru.md)
 
 **Совет:** Whisper, Kokoro, Embeddings, LiteLLM, Ollama, Docling и MCP-шлюз можно [использовать совместно](#использование-с-другими-ai-сервисами) для построения полного self-hosted AI-стека на собственном сервере.
@@ -126,7 +126,7 @@ docker image tag quay.io/hwdsl2/litellm-server hwdsl2/litellm-server
 | `LITELLM_GROQ_API_KEY` | API-ключ Groq — автодобавляет `llama-3.3-70b` | *(не задано)* |
 | `LITELLM_GEMINI_API_KEY` | API-ключ Google Gemini — автодобавляет `gemini-2.0-flash` | *(не задано)* |
 | `LITELLM_OLLAMA_BASE_URL` | Базовый URL Ollama — автодобавляет `ollama/llama3.2:3b` | *(не задано)* |
-| `LITELLM_OLLAMA_API_KEY` | API-ключ Ollama (автоматически считывается из общего тома в [docker-ai-stack](https://github.com/hwdsl2/docker-ai-stack/blob/main/README-ru.md)) | *(не задано)* |
+| `LITELLM_OLLAMA_API_KEY` | API-ключ Ollama (автоматически считывается из общего тома в [self-hosted-ai-stack](https://github.com/hwdsl2/self-hosted-ai-stack/blob/main/README-ru.md)) | *(не задано)* |
 | `LITELLM_DATABASE_URL` | URL PostgreSQL — включает управление виртуальными ключами | *(не задано)* |
 | `LITELLM_MCP_URL` | URL конечной точки MCP Gateway — автоподключение к MCP Gateway при каждом запуске | *(не задано)* |
 | `LITELLM_MCP_API_KEY` | Bearer-токен для MCP Gateway (обязателен при установке `LITELLM_MCP_URL`) | *(не задано)* |
@@ -442,7 +442,7 @@ docker rm -f litellm
 | **[MCP-шлюз](https://github.com/hwdsl2/docker-mcp-gateway/blob/main/README-ru.md)** | Предоставляет сервисы ИИ как MCP-инструменты для ИИ-ассистентов (Claude, Cursor и др.) | `3000` |
 | **[Docling](https://github.com/hwdsl2/docker-docling/blob/main/README-ru.md)** | Конвертирует документы (PDF, DOCX и др.) в структурированный текст/Markdown | `5001` |
 
-**См. также: [Docker AI Stack](https://github.com/hwdsl2/docker-ai-stack/blob/main/README-ru.md)** — разверните полный стек одной командой, с готовыми конфигурациями и примерами конвейеров.
+**См. также: [Self-Hosted AI Stack](https://github.com/hwdsl2/self-hosted-ai-stack/blob/main/README-ru.md)** — разверните полный стек одной командой, с готовыми конфигурациями и примерами конвейеров.
 
 ## Технические подробности
 

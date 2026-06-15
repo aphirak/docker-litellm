@@ -4,7 +4,7 @@
 
 [![Build Status](https://github.com/hwdsl2/docker-litellm/actions/workflows/main.yml/badge.svg)](https://github.com/hwdsl2/docker-litellm/actions/workflows/main.yml) &nbsp;[![Docker Pulls](https://raw.githubusercontent.com/hwdsl2/badges/main/img/docker-pulls-litellm-server.svg)](https://hub.docker.com/r/hwdsl2/litellm-server) &nbsp;[![License: MIT](docs/images/license.svg)](https://opensource.org/licenses/MIT)
 
-[Docker AI Stack](https://github.com/hwdsl2/docker-ai-stack/blob/main/README-zh.md) 的一部分 ─ 一条命令部署完整的自托管 AI 技术栈。
+[Self-Hosted AI Stack](https://github.com/hwdsl2/self-hosted-ai-stack/blob/main/README-zh.md) 的一部分 ─ 一条命令部署完整的自托管 AI 技术栈。
 
 运行 [LiteLLM](https://github.com/BerriAI/litellm) AI 网关代理的 Docker 镜像。在 100+ 个大型语言模型（LLM）提供商前面提供统一的 OpenAI 兼容 API 端点。基于 Debian (python:3.12-slim)。简单、私密、可自托管。
 
@@ -22,7 +22,7 @@
 
 **另提供：**
 
-- AI 套件：[Docker AI Stack](https://github.com/hwdsl2/docker-ai-stack/blob/main/README-zh.md)
+- AI 套件：[Self-Hosted AI Stack](https://github.com/hwdsl2/self-hosted-ai-stack/blob/main/README-zh.md)
 - 相关 AI 服务：[Whisper (STT)](https://github.com/hwdsl2/docker-whisper/blob/main/README-zh.md)、[Kokoro (TTS)](https://github.com/hwdsl2/docker-kokoro/blob/main/README-zh.md)、[Embeddings](https://github.com/hwdsl2/docker-embeddings/blob/main/README-zh.md)、[Ollama (LLM)](https://github.com/hwdsl2/docker-ollama/blob/main/README-zh.md)、[Docling](https://github.com/hwdsl2/docker-docling/blob/main/README-zh.md)、[MCP Gateway](https://github.com/hwdsl2/docker-mcp-gateway/blob/main/README-zh.md)
 
 **提示：** Whisper、Kokoro、Embeddings、LiteLLM、Ollama、Docling 和 MCP 网关可以[配合使用](#与其他-ai-服务配合使用)，在您自己的服务器上搭建完整的自托管 AI 系统。
@@ -126,7 +126,7 @@ docker image tag quay.io/hwdsl2/litellm-server hwdsl2/litellm-server
 | `LITELLM_GROQ_API_KEY` | Groq API 密钥 — 自动添加 `llama-3.3-70b` | *(未设置)* |
 | `LITELLM_GEMINI_API_KEY` | Google Gemini API 密钥 — 自动添加 `gemini-2.0-flash` | *(未设置)* |
 | `LITELLM_OLLAMA_BASE_URL` | Ollama 基础 URL — 自动添加 `ollama/llama3.2:3b` | *(未设置)* |
-| `LITELLM_OLLAMA_API_KEY` | Ollama API 密钥（在 [docker-ai-stack](https://github.com/hwdsl2/docker-ai-stack/blob/main/README-zh.md) 中通过共享卷自动读取） | *(未设置)* |
+| `LITELLM_OLLAMA_API_KEY` | Ollama API 密钥（在 [self-hosted-ai-stack](https://github.com/hwdsl2/self-hosted-ai-stack/blob/main/README-zh.md) 中通过共享卷自动读取） | *(未设置)* |
 | `LITELLM_DATABASE_URL` | PostgreSQL URL — 启用虚拟密钥管理 | *(未设置)* |
 | `LITELLM_MCP_URL` | MCP 网关端点 URL — 每次启动时自动接入 MCP 网关 | *(未设置)* |
 | `LITELLM_MCP_API_KEY` | MCP 网关的 Bearer 令牌（设置 `LITELLM_MCP_URL` 时必填） | *(未设置)* |
@@ -442,7 +442,7 @@ Whisper (STT)、Embeddings、LiteLLM、Kokoro (TTS)、Ollama (LLM)、Docling 和
 | **[MCP 网关](https://github.com/hwdsl2/docker-mcp-gateway/blob/main/README-zh.md)** | 将 AI 服务作为 MCP 工具暴露给 AI 助手（Claude、Cursor 等） | `3000` |
 | **[Docling](https://github.com/hwdsl2/docker-docling/blob/main/README-zh.md)** | 将文档（PDF、DOCX 等）转换为结构化文本/Markdown | `5001` |
 
-**另请参阅：[Docker AI Stack](https://github.com/hwdsl2/docker-ai-stack/blob/main/README-zh.md)** — 一条命令即可部署完整技术栈，提供现成的配置和流水线示例。
+**另请参阅：[Self-Hosted AI Stack](https://github.com/hwdsl2/self-hosted-ai-stack/blob/main/README-zh.md)** — 一条命令即可部署完整技术栈，提供现成的配置和流水线示例。
 
 ## 技术细节
 

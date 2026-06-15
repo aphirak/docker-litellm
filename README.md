@@ -4,7 +4,7 @@
 
 [![Build Status](https://github.com/hwdsl2/docker-litellm/actions/workflows/main.yml/badge.svg)](https://github.com/hwdsl2/docker-litellm/actions/workflows/main.yml) &nbsp;[![Docker Pulls](https://raw.githubusercontent.com/hwdsl2/badges/main/img/docker-pulls-litellm-server.svg)](https://hub.docker.com/r/hwdsl2/litellm-server) &nbsp;[![License: MIT](docs/images/license.svg)](https://opensource.org/licenses/MIT)
 
-Part of the [Docker AI Stack](https://github.com/hwdsl2/docker-ai-stack) — deploy a complete self-hosted AI stack with a single command.
+Part of the [Self-Hosted AI Stack](https://github.com/hwdsl2/self-hosted-ai-stack) — deploy a complete self-hosted AI stack with a single command.
 
 Docker image to run a [LiteLLM](https://github.com/BerriAI/litellm) AI gateway proxy. Provides a single OpenAI-compatible API endpoint in front of 100+ LLM providers. Based on Debian (python:3.12-slim). Designed to be simple, private, and self-hosted.
 
@@ -22,7 +22,7 @@ Docker image to run a [LiteLLM](https://github.com/BerriAI/litellm) AI gateway p
 
 **Also available:**
 
-- AI stack: [Docker AI Stack](https://github.com/hwdsl2/docker-ai-stack)
+- AI stack: [Self-Hosted AI Stack](https://github.com/hwdsl2/self-hosted-ai-stack)
 - Related AI services: [Whisper (STT)](https://github.com/hwdsl2/docker-whisper), [Kokoro (TTS)](https://github.com/hwdsl2/docker-kokoro), [Embeddings](https://github.com/hwdsl2/docker-embeddings), [Ollama (LLM)](https://github.com/hwdsl2/docker-ollama), [Docling](https://github.com/hwdsl2/docker-docling), [MCP Gateway](https://github.com/hwdsl2/docker-mcp-gateway)
 
 **Tip:** Whisper, Kokoro, Embeddings, LiteLLM, Ollama, Docling, and MCP Gateway can be [used together](#using-with-other-ai-services) to build a complete, self-hosted AI stack on your own server.
@@ -128,7 +128,7 @@ This Docker image uses the following variables, that can be declared in an `env`
 | `LITELLM_GROQ_API_KEY` | Groq API key — auto-adds `llama-3.3-70b` | *(not set)* |
 | `LITELLM_GEMINI_API_KEY` | Google Gemini API key — auto-adds `gemini-2.0-flash` | *(not set)* |
 | `LITELLM_OLLAMA_BASE_URL` | Ollama base URL — auto-adds `ollama/llama3.2:3b` | *(not set)* |
-| `LITELLM_OLLAMA_API_KEY` | Ollama API key (auto-read from shared volume in [docker-ai-stack](https://github.com/hwdsl2/docker-ai-stack)) | *(not set)* |
+| `LITELLM_OLLAMA_API_KEY` | Ollama API key (auto-read from shared volume in [self-hosted-ai-stack](https://github.com/hwdsl2/self-hosted-ai-stack)) | *(not set)* |
 | `LITELLM_DATABASE_URL` | PostgreSQL URL — enables virtual key management | *(not set)* |
 | `LITELLM_MCP_URL` | MCP Gateway endpoint URL — auto-wires MCP Gateway on every start | *(not set)* |
 | `LITELLM_MCP_API_KEY` | Bearer token for the MCP Gateway (required when `LITELLM_MCP_URL` is set) | *(not set)* |
@@ -446,7 +446,7 @@ The Whisper (STT), Embeddings, LiteLLM, Kokoro (TTS), Ollama (LLM), Docling, and
 | **[MCP Gateway](https://github.com/hwdsl2/docker-mcp-gateway)** | Exposes AI services as MCP tools for AI assistants (Claude, Cursor, etc.) | `3000` |
 | **[Docling](https://github.com/hwdsl2/docker-docling)** | Converts documents (PDF, DOCX, etc.) to structured text/Markdown | `5001` |
 
-**See also: [Docker AI Stack](https://github.com/hwdsl2/docker-ai-stack)** — deploy the full stack with a single command, with ready-made configurations and pipeline examples.
+**See also: [Self-Hosted AI Stack](https://github.com/hwdsl2/self-hosted-ai-stack)** — deploy the full stack with a single command, with ready-made configurations and pipeline examples.
 
 ## Technical details
 

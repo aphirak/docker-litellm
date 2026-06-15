@@ -164,7 +164,7 @@ if ! grep -q " /etc/litellm " /proc/mounts 2>/dev/null; then
   echo "      Mount a Docker volume at /etc/litellm to persist data."
 fi
 
-# Auto-read API keys from shared volumes if mounted (used by docker-ai-stack)
+# Auto-read API keys from shared volumes if mounted (used by self-hosted-ai-stack)
 if [ -z "$LITELLM_OLLAMA_API_KEY" ] && grep -q " /var/lib/ollama-shared " /proc/mounts 2>/dev/null; then
   if [ -f /var/lib/ollama-shared/.api_key ]; then
     LITELLM_OLLAMA_API_KEY=$(cat /var/lib/ollama-shared/.api_key)
@@ -361,7 +361,7 @@ if ! wait_for_server; then
   exit 1
 fi
 
-# Copy master key to shared volume if mounted (used by docker-ai-stack)
+# Copy master key to shared volume if mounted (used by self-hosted-ai-stack)
 if grep -q " /var/lib/litellm-shared " /proc/mounts 2>/dev/null; then
   cp "$MASTER_KEY_FILE" /var/lib/litellm-shared/.api_key
   chmod 644 /var/lib/litellm-shared/.api_key
