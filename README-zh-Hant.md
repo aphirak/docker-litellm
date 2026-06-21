@@ -14,8 +14,9 @@
 - 自動為環境檔案中設定的提供商 API 金鑰新增對應模型
 - 透過輔助腳本（`litellm_manage`）管理模型
 - `docker-compose.yml` 包含用於管理介面、虛擬金鑰管理和支出追蹤的 PostgreSQL 資料庫
-- OpenAI 相容 API — 只需修改一行設定，即可將任何 OpenAI SDK 或應用程式指向此代理
+- OpenAI 相容代理 API — 只需修改一行設定，即可將 OpenAI SDK 和應用程式工作流程指向此代理
 - 支援 OpenAI、Anthropic、Groq、Gemini、Ollama 及 [100 個以上其他提供商](https://docs.litellm.ai/docs/providers)
+- 支援的端點和欄位取決於 LiteLLM、所選提供商和模型能力
 - 透過 [GitHub Actions](https://github.com/hwdsl2/docker-litellm/actions/workflows/main.yml) 自動建置和發布
 - 透過 Docker 磁碟區持久化資料
 - 多架構支援：`linux/amd64`、`linux/arm64`
@@ -270,7 +271,7 @@ docker exec litellm litellm_manage --deletekey sk-...
 
 ## 與 OpenAI SDK 一起使用
 
-透過設定兩個環境變數，將任何使用 OpenAI SDK 的應用程式指向您的代理：
+透過設定兩個環境變數，將使用 OpenAI SDK 的應用程式指向您的代理：
 
 ```bash
 export OPENAI_API_KEY="<您的主金鑰>"

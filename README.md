@@ -14,8 +14,9 @@ Docker image to run a [LiteLLM](https://github.com/BerriAI/litellm) AI gateway p
 - Auto-adds models for any provider API keys set in the env file
 - Model management via a helper script (`litellm_manage`)
 - The `docker-compose.yml` includes a PostgreSQL database for the Admin UI, virtual key management, and spend tracking
-- OpenAI-compatible API — point any OpenAI SDK or app at your proxy with a one-line change
+- OpenAI-compatible proxy API — point OpenAI SDK and app workflows at your proxy with a one-line change
 - Supports OpenAI, Anthropic, Groq, Gemini, Ollama, and [100+ other providers](https://docs.litellm.ai/docs/providers)
+- Supported endpoints and fields depend on LiteLLM, the selected provider, and model capabilities
 - Automatically built and published via [GitHub Actions](https://github.com/hwdsl2/docker-litellm/actions/workflows/main.yml)
 - Persistent data via a Docker volume
 - Multi-arch: `linux/amd64`, `linux/arm64`
@@ -272,7 +273,7 @@ docker exec litellm litellm_manage --deletekey sk-...
 
 ## Using the proxy with OpenAI SDK
 
-Point any app that uses the OpenAI SDK at your proxy by setting two environment variables:
+Point apps that use the OpenAI SDK at your proxy by setting two environment variables:
 
 ```bash
 export OPENAI_API_KEY="<your-master-key>"
