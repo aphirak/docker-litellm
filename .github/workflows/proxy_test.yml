@@ -3,9 +3,39 @@ name: proxy_test
 on: workflow_call
 
 jobs:
+  compose_config:
+    runs-on: ubuntu-24.04
+    if: github.repository_owner == 'hwdsl2'
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Validate compose file
+        run: |
+          [ ! -x /usr/bin/docker ] && exit 1
+
+          cd "$GITHUB_WORKSPACE"
+          pwd
+
+          docker compose version
+          docker compose -f docker-compose.yml config >/tmp/litellm-compose.yml
+
+          docker compose -f docker-compose.yml config --services | grep -qx 'litellm-init'
+          docker compose -f docker-compose.yml config --services | grep -qx 'db'
+          docker compose -f docker-compose.yml config --services | grep -qx 'litellm'
+
+          test -r scripts/litellm-init.sh
+          grep -q 'POSTGRES_PASSWORD_FILE: /var/lib/litellm-secrets/postgres_password' docker-compose.yml
+          grep -q 'LITELLM_POSTGRES_PASSWORD_FILE=/var/lib/litellm-secrets/postgres_password' docker-compose.yml
+          grep -q 'litellm-secrets:' docker-compose.yml
+
+          ! grep -q 'POSTGRES_PASSWORD: litellm' docker-compose.yml
+          ! grep -q 'postgresql://litellm:litellm' docker-compose.yml
+
   proxy_test:
     runs-on: ubuntu-24.04
     if: github.repository_owner == 'hwdsl2'
+    needs: compose_config
     strategy:
       matrix:
         test_id: [no-env, with-env, with-master-key, with-mcp, with-shared-vol, with-litellm-shared]

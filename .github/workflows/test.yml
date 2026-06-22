@@ -8,6 +8,9 @@ on:
       - '.github/workflows/test.yml'
       - '.github/workflows/shellcheck.yml'
       - '.github/workflows/proxy_test.yml'
+      - 'docker-compose.yml'
+      - 'litellm.env.example'
+      - 'scripts/**/*.sh'
 
 jobs:
   shellcheck:
