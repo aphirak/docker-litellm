@@ -131,6 +131,7 @@ This Docker image uses the following variables, that can be declared in an `env`
 | `LITELLM_OLLAMA_BASE_URL` | Ollama base URL — auto-adds `ollama/llama3.2:3b` | *(not set)* |
 | `LITELLM_OLLAMA_API_KEY` | Ollama API key (auto-read from shared volume in [self-hosted-ai-stack](https://github.com/hwdsl2/self-hosted-ai-stack)) | *(not set)* |
 | `LITELLM_DATABASE_URL` | PostgreSQL URL — enables virtual key management | *(not set)* |
+| `LITELLM_POSTGRES_PASSWORD_FILE` | File containing the Compose Postgres password; used only when `LITELLM_DATABASE_URL` is not set | *(not set)* |
 | `LITELLM_MCP_URL` | MCP Gateway endpoint URL — auto-wires MCP Gateway on every start | *(not set)* |
 | `LITELLM_MCP_API_KEY` | Bearer token for the MCP Gateway (required when `LITELLM_MCP_URL` is set) | *(not set)* |
 
@@ -322,20 +323,40 @@ docker compose up -d
 docker logs litellm
 ```
 
+Fresh Compose installs generate a random PostgreSQL password automatically and store it in the `litellm-secrets` volume. Existing default installs continue to use the legacy `litellm` database password for compatibility. If you previously customized the database password, set `LITELLM_POSTGRES_PASSWORD` in your shell environment to that password before running `docker compose up -d`, or keep an explicit `LITELLM_DATABASE_URL` override in `litellm.env`.
+
+When upgrading an existing checkout, run `docker compose pull` before `docker compose up -d` so the LiteLLM image supports `LITELLM_POSTGRES_PASSWORD_FILE`.
+
 Example `docker-compose.yml` (already included):
 
 ```yaml
 services:
+  litellm-init:
+    image: alpine:3.24
+    container_name: litellm-init
+    restart: "no"
+    environment:
+      - LITELLM_POSTGRES_PASSWORD=${LITELLM_POSTGRES_PASSWORD:-}
+    volumes:
+      - litellm-db:/var/lib/postgresql:ro
+      - litellm-secrets:/var/lib/litellm-secrets
+      - ./scripts/litellm-init.sh:/usr/local/bin/litellm-init.sh:ro
+    entrypoint: ["/bin/sh", "/usr/local/bin/litellm-init.sh"]
+
   db:
     image: postgres:18
     container_name: litellm-db
     restart: always
     environment:
       POSTGRES_USER: litellm
-      POSTGRES_PASSWORD: litellm
+      POSTGRES_PASSWORD_FILE: /var/lib/litellm-secrets/postgres_password
       POSTGRES_DB: litellm
     volumes:
       - litellm-db:/var/lib/postgresql
+      - litellm-secrets:/var/lib/litellm-secrets:ro
+    depends_on:
+      litellm-init:
+        condition: service_completed_successfully
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U litellm"]
       interval: 15s
@@ -349,9 +370,10 @@ services:
     ports:
       - "4000:4000/tcp"  # For a host-based reverse proxy, change to "127.0.0.1:4000:4000/tcp"
     environment:
-      - LITELLM_DATABASE_URL=postgresql://litellm:litellm@db:5432/litellm
+      - LITELLM_POSTGRES_PASSWORD_FILE=/var/lib/litellm-secrets/postgres_password
     volumes:
       - litellm-data:/etc/litellm
+      - litellm-secrets:/var/lib/litellm-secrets:ro
       - ./litellm.env:/litellm.env:ro
     depends_on:
       db:
@@ -360,6 +382,8 @@ services:
 volumes:
   litellm-data:
     name: litellm-data
+  litellm-secrets:
+    name: litellm-secrets
   litellm-db:
     name: litellm-db
 ```

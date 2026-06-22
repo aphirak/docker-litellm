@@ -129,6 +129,7 @@ docker image tag quay.io/hwdsl2/litellm-server hwdsl2/litellm-server
 | `LITELLM_OLLAMA_BASE_URL` | Базовый URL Ollama — автодобавляет `ollama/llama3.2:3b` | *(не задано)* |
 | `LITELLM_OLLAMA_API_KEY` | API-ключ Ollama (автоматически считывается из общего тома в [self-hosted-ai-stack](https://github.com/hwdsl2/self-hosted-ai-stack/blob/main/README-ru.md)) | *(не задано)* |
 | `LITELLM_DATABASE_URL` | URL PostgreSQL — включает управление виртуальными ключами | *(не задано)* |
+| `LITELLM_POSTGRES_PASSWORD_FILE` | Файл с паролем PostgreSQL для Compose; используется только если `LITELLM_DATABASE_URL` не задан | *(не задано)* |
 | `LITELLM_MCP_URL` | URL конечной точки MCP Gateway — автоподключение к MCP Gateway при каждом запуске | *(не задано)* |
 | `LITELLM_MCP_API_KEY` | Bearer-токен для MCP Gateway (обязателен при установке `LITELLM_MCP_URL`) | *(не задано)* |
 
@@ -318,20 +319,40 @@ docker compose up -d
 docker logs litellm
 ```
 
+Новые установки Compose автоматически генерируют случайный пароль PostgreSQL и сохраняют его в томе `litellm-secrets`. Существующие установки с паролем по умолчанию продолжают использовать старый пароль базы данных `litellm` для совместимости. Если вы ранее настроили собственный пароль базы данных, задайте `LITELLM_POSTGRES_PASSWORD` в окружении shell с этим паролем перед запуском `docker compose up -d` или сохраните явное переопределение `LITELLM_DATABASE_URL` в `litellm.env`.
+
+При обновлении существующего checkout сначала выполните `docker compose pull`, а затем `docker compose up -d`, чтобы образ LiteLLM поддерживал `LITELLM_POSTGRES_PASSWORD_FILE`.
+
 Пример `docker-compose.yml` (уже включён):
 
 ```yaml
 services:
+  litellm-init:
+    image: alpine:3.24
+    container_name: litellm-init
+    restart: "no"
+    environment:
+      - LITELLM_POSTGRES_PASSWORD=${LITELLM_POSTGRES_PASSWORD:-}
+    volumes:
+      - litellm-db:/var/lib/postgresql:ro
+      - litellm-secrets:/var/lib/litellm-secrets
+      - ./scripts/litellm-init.sh:/usr/local/bin/litellm-init.sh:ro
+    entrypoint: ["/bin/sh", "/usr/local/bin/litellm-init.sh"]
+
   db:
     image: postgres:18
     container_name: litellm-db
     restart: always
     environment:
       POSTGRES_USER: litellm
-      POSTGRES_PASSWORD: litellm
+      POSTGRES_PASSWORD_FILE: /var/lib/litellm-secrets/postgres_password
       POSTGRES_DB: litellm
     volumes:
       - litellm-db:/var/lib/postgresql
+      - litellm-secrets:/var/lib/litellm-secrets:ro
+    depends_on:
+      litellm-init:
+        condition: service_completed_successfully
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U litellm"]
       interval: 15s
@@ -345,9 +366,10 @@ services:
     ports:
       - "4000:4000/tcp"  # For a host-based reverse proxy, change to "127.0.0.1:4000:4000/tcp"
     environment:
-      - LITELLM_DATABASE_URL=postgresql://litellm:litellm@db:5432/litellm
+      - LITELLM_POSTGRES_PASSWORD_FILE=/var/lib/litellm-secrets/postgres_password
     volumes:
       - litellm-data:/etc/litellm
+      - litellm-secrets:/var/lib/litellm-secrets:ro
       - ./litellm.env:/litellm.env:ro
     depends_on:
       db:
@@ -356,6 +378,8 @@ services:
 volumes:
   litellm-data:
     name: litellm-data
+  litellm-secrets:
+    name: litellm-secrets
   litellm-db:
     name: litellm-db
 ```
