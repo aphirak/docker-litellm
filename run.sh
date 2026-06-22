@@ -19,6 +19,15 @@ exiterr()  { echo "Error: $1" >&2; exit 1; }
 nospaces() { printf '%s' "$1" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//'; }
 noquotes() { printf '%s' "$1" | sed -e 's/^"\(.*\)"$/\1/' -e "s/^'\(.*\)'$/\1/"; }
 
+urlencode_component() {
+  python3 - "$1" <<'PYEOF'
+import sys
+from urllib.parse import quote
+
+print(quote(sys.argv[1], safe=""))
+PYEOF
+}
+
 check_port() {
   printf '%s' "$1" | tr -d '\n' | grep -Eq '^[0-9]+$' \
   && [ "$1" -ge 1 ] && [ "$1" -le 65535 ]
@@ -67,6 +76,8 @@ LITELLM_OLLAMA_API_KEY=$(nospaces "$LITELLM_OLLAMA_API_KEY")
 LITELLM_OLLAMA_API_KEY=$(noquotes "$LITELLM_OLLAMA_API_KEY")
 LITELLM_DATABASE_URL=$(nospaces "$LITELLM_DATABASE_URL")
 LITELLM_DATABASE_URL=$(noquotes "$LITELLM_DATABASE_URL")
+LITELLM_POSTGRES_PASSWORD_FILE=$(nospaces "$LITELLM_POSTGRES_PASSWORD_FILE")
+LITELLM_POSTGRES_PASSWORD_FILE=$(noquotes "$LITELLM_POSTGRES_PASSWORD_FILE")
 LITELLM_HOST=$(nospaces "$LITELLM_HOST")
 LITELLM_HOST=$(noquotes "$LITELLM_HOST")
 LITELLM_MCP_URL=$(nospaces "$LITELLM_MCP_URL")
@@ -88,6 +99,23 @@ case "$LITELLM_LOG_LEVEL" in
   DEBUG|INFO|WARNING|ERROR|CRITICAL) ;;
   *) exiterr "LITELLM_LOG_LEVEL must be one of: DEBUG, INFO, WARNING, ERROR, CRITICAL." ;;
 esac
+
+# Build the default Compose database URL from a password file when no explicit URL
+# is provided. This keeps LITELLM_DATABASE_URL as the most flexible override.
+if [ -z "$LITELLM_DATABASE_URL" ] && [ -n "$LITELLM_POSTGRES_PASSWORD_FILE" ]; then
+  if [ ! -r "$LITELLM_POSTGRES_PASSWORD_FILE" ]; then
+    exiterr "LITELLM_POSTGRES_PASSWORD_FILE '$LITELLM_POSTGRES_PASSWORD_FILE' is not readable."
+  fi
+  LITELLM_POSTGRES_PASSWORD=$(cat "$LITELLM_POSTGRES_PASSWORD_FILE")
+  LITELLM_POSTGRES_PASSWORD=$(nospaces "$LITELLM_POSTGRES_PASSWORD")
+  LITELLM_POSTGRES_PASSWORD=$(noquotes "$LITELLM_POSTGRES_PASSWORD")
+  if [ -z "$LITELLM_POSTGRES_PASSWORD" ]; then
+    exiterr "LITELLM_POSTGRES_PASSWORD_FILE '$LITELLM_POSTGRES_PASSWORD_FILE' is empty."
+  fi
+  ENCODED_POSTGRES_PASSWORD=$(urlencode_component "$LITELLM_POSTGRES_PASSWORD") \
+    || exiterr "Failed to URL-encode Postgres password."
+  LITELLM_DATABASE_URL="postgresql://litellm:${ENCODED_POSTGRES_PASSWORD}@db:5432/litellm"
+fi
 
 # Validate database URL
 if [ -n "$LITELLM_DATABASE_URL" ]; then

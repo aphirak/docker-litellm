@@ -1,14 +1,30 @@
 services:
+  litellm-init:
+    image: alpine:3.24
+    container_name: litellm-init
+    restart: "no"
+    environment:
+      - LITELLM_POSTGRES_PASSWORD=${LITELLM_POSTGRES_PASSWORD:-}
+    volumes:
+      - litellm-db:/var/lib/postgresql:ro
+      - litellm-secrets:/var/lib/litellm-secrets
+      - ./scripts/litellm-init.sh:/usr/local/bin/litellm-init.sh:ro
+    entrypoint: ["/bin/sh", "/usr/local/bin/litellm-init.sh"]
+
   db:
     image: postgres:18
     container_name: litellm-db
     restart: always
     environment:
       POSTGRES_USER: litellm
-      POSTGRES_PASSWORD: litellm
+      POSTGRES_PASSWORD_FILE: /var/lib/litellm-secrets/postgres_password
       POSTGRES_DB: litellm
     volumes:
       - litellm-db:/var/lib/postgresql
+      - litellm-secrets:/var/lib/litellm-secrets:ro
+    depends_on:
+      litellm-init:
+        condition: service_completed_successfully
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U litellm"]
       interval: 15s
@@ -22,9 +38,10 @@ services:
     ports:
       - "4000:4000/tcp"  # For a host-based reverse proxy, change to "127.0.0.1:4000:4000/tcp"
     environment:
-      - LITELLM_DATABASE_URL=postgresql://litellm:litellm@db:5432/litellm
+      - LITELLM_POSTGRES_PASSWORD_FILE=/var/lib/litellm-secrets/postgres_password
     volumes:
       - litellm-data:/etc/litellm
+      - litellm-secrets:/var/lib/litellm-secrets:ro
       - ./litellm.env:/litellm.env:ro
     depends_on:
       db:
@@ -33,5 +50,7 @@ services:
 volumes:
   litellm-data:
     name: litellm-data
+  litellm-secrets:
+    name: litellm-secrets
   litellm-db:
     name: litellm-db
