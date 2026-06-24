@@ -175,7 +175,7 @@ jobs:
           docker exec "$TEST_ID" litellm_manage --listmodels
 
           # Test --addmodel: writes to config.yaml and auto-restarts proxy via kill -TERM 1
-          docker exec "$TEST_ID" litellm_manage --addmodel openai/gpt-4o-test --alias ci-test-model || true
+          docker exec "$TEST_ID" litellm_manage --addmodel openai/gpt-4o-test --alias ci-test-model --supports-function-calling || true
 
           # Wait for shutdown before polling
           sleep 15
@@ -198,6 +198,8 @@ jobs:
 
           # Verify model was written to config.yaml
           docker exec "$TEST_ID" grep -q 'ci-test-model' /etc/litellm/config.yaml
+          docker exec "$TEST_ID" python3 -c \
+            "import yaml; c=yaml.safe_load(open('/etc/litellm/config.yaml')); m=next(m for m in c['model_list'] if m.get('model_name')=='ci-test-model'); assert m['model_info']['supports_function_calling'] is True"
 
           # Retrieve model ID for removal test
           MODEL_ID=$(docker exec "$TEST_ID" python3 -c \
@@ -287,6 +289,8 @@ jobs:
             # Verify Ollama API key was read and used in config
             docker exec "$TEST_ID" grep -q 'test-ollama-key-12345' /etc/litellm/config.yaml \
               || { echo "Ollama API key from shared volume not found in config.yaml"; exit 1; }
+            docker exec "$TEST_ID" python3 -c \
+              "import yaml; c=yaml.safe_load(open('/etc/litellm/config.yaml')); ml=c.get('model_list', []); old=[m for m in ml if m.get('model_name')=='ollama/llama3.2:3b']; chat=[m for m in ml if m.get('model_name')=='ollama-chat/llama3.2:3b']; assert len(old)==1, old; assert len(chat)==1, chat; assert old[0]['litellm_params']['model']=='ollama/llama3.2:3b'; assert chat[0]['litellm_params']['model']=='ollama_chat/llama3.2:3b'; assert old[0]['litellm_params']['api_base']=='http://127.0.0.1:11434'; assert chat[0]['litellm_params']['api_base']=='http://127.0.0.1:11434'; assert chat[0]['litellm_params']['api_key']=='test-ollama-key-12345'; assert chat[0]['model_info']['supports_function_calling'] is True"
             # Verify MCP API key was read and used in config
             docker exec "$TEST_ID" grep -q 'test-mcp-key-67890' /etc/litellm/config.yaml \
               || { echo "MCP API key from shared volume not found in config.yaml"; exit 1; }
