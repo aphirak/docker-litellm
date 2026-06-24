@@ -238,6 +238,61 @@ with open(cfg, 'w') as f:
 PYEOF
 }
 
+ensure_model_in_config() {
+  local model_name="$1" provider="$2" api_key="$3" api_base="$4" supports_function_calling="${5:-false}" update_existing="${6:-true}"
+  _MN="$model_name" _P="$provider" _AK="${api_key:-}" _AB="${api_base:-}" _SFC="$supports_function_calling" _UPDATE="$update_existing" \
+  python3 - << 'PYEOF'
+import os
+import uuid
+import yaml
+
+cfg = '/etc/litellm/config.yaml'
+with open(cfg) as f:
+    config = yaml.safe_load(f) or {}
+
+model_name = os.environ['_MN']
+models = config.setdefault('model_list', [])
+matches = [m for m in models if m.get('model_name') == model_name]
+if matches and os.environ.get('_UPDATE') != 'true':
+    raise SystemExit(0)
+
+entry = dict(matches[0]) if matches else {}
+
+entry['model_name'] = model_name
+entry['litellm_params'] = dict(entry.get('litellm_params') or {})
+entry['litellm_params']['model'] = os.environ['_P']
+if os.environ.get('_AB'):
+    entry['litellm_params']['api_base'] = os.environ['_AB']
+else:
+    entry['litellm_params'].pop('api_base', None)
+if os.environ.get('_AK'):
+    entry['litellm_params']['api_key'] = os.environ['_AK']
+else:
+    entry['litellm_params'].pop('api_key', None)
+
+entry['model_info'] = dict(entry.get('model_info') or {})
+entry['model_info'].setdefault('id', str(uuid.uuid4()))
+if os.environ.get('_SFC') == 'true':
+    entry['model_info']['supports_function_calling'] = True
+
+new_models = []
+inserted = False
+for model in models:
+    if model.get('model_name') == model_name:
+        if not inserted:
+            new_models.append(entry)
+            inserted = True
+        continue
+    new_models.append(model)
+if not inserted:
+    new_models.append(entry)
+
+config['model_list'] = new_models
+with open(cfg, 'w') as f:
+    yaml.safe_dump(config, f, default_flow_style=False, allow_unicode=True)
+PYEOF
+}
+
 # Create config.yaml only if it does not yet exist.
 # On subsequent restarts the existing file is preserved, keeping model_list intact.
 if [ ! -f /etc/litellm/config.yaml ]; then
@@ -330,9 +385,8 @@ if $first_run; then
   fi
 
   if [ -n "$LITELLM_OLLAMA_BASE_URL" ]; then
-    echo "  Adding Ollama model (ollama/llama3.2:3b)..."
-    add_model_to_config "ollama/llama3.2:3b" "ollama/llama3.2:3b" "$LITELLM_OLLAMA_API_KEY" "$LITELLM_OLLAMA_BASE_URL"
-    added_models=$((added_models + 1))
+    echo "  Adding Ollama models (ollama/llama3.2:3b, ollama-chat/llama3.2:3b)..."
+    added_models=$((added_models + 2))
   fi
 
   touch "$INITIALIZED_MARKER"
@@ -340,6 +394,17 @@ else
   echo
   echo "Found existing LiteLLM data, starting proxy..."
   echo
+fi
+
+if [ -n "$LITELLM_OLLAMA_BASE_URL" ]; then
+  echo "Ensuring Ollama model alias (ollama/llama3.2:3b)..."
+  ensure_model_in_config "ollama/llama3.2:3b" "ollama/llama3.2:3b" \
+    "$LITELLM_OLLAMA_API_KEY" "$LITELLM_OLLAMA_BASE_URL" "false" "false" \
+    || exiterr "Failed to update Ollama model alias."
+  echo "Ensuring Ollama chat model alias (ollama-chat/llama3.2:3b)..."
+  ensure_model_in_config "ollama-chat/llama3.2:3b" "ollama_chat/llama3.2:3b" \
+    "$LITELLM_OLLAMA_API_KEY" "$LITELLM_OLLAMA_BASE_URL" "true" "true" \
+    || exiterr "Failed to update Ollama chat model alias."
 fi
 
 # Graceful shutdown handler — registered before starting LiteLLM so any

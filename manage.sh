@@ -35,6 +35,8 @@ Options:
                [--key    <api_key>]    API key for the provider (if required)
                [--base-url <url>]      base URL override (e.g. for Ollama)
                [--alias  <name>]       display name for the model (optional)
+               [--supports-function-calling]
+                                       mark the model as function-calling capable
   --removemodel <model_id>             remove a model by its ID (restarts proxy)
   --showkey                            show the master API key
   --getkey                             output the master API key (machine-readable, no decoration)
@@ -61,6 +63,7 @@ Examples:
   docker exec litellm litellm_manage --addmodel openai/gpt-4o --key sk-...
   docker exec litellm litellm_manage --addmodel openai/gpt-4o --key sk-... --alias gpt-4o
   docker exec litellm litellm_manage --addmodel ollama/llama3.2:3b --base-url http://host.docker.internal:11434
+  docker exec litellm litellm_manage --addmodel ollama_chat/llama3.2:3b --alias ollama-chat/llama3.2:3b --base-url http://host.docker.internal:11434 --supports-function-calling
   docker exec litellm litellm_manage --removemodel <model_id>
   docker exec litellm litellm_manage --showkey
   docker exec litellm litellm_manage --createkey --alias dev-key --models gpt-4o,claude-3-6-sonnet --budget 20.0
@@ -152,6 +155,7 @@ parse_args() {
   model_provider=""
   model_key=""
   model_base_url=""
+  model_supports_function_calling=0
   alias_arg=""
   model_id=""
   key_models=""
@@ -226,6 +230,10 @@ parse_args() {
       --alias)
         alias_arg="$2"
         shift; shift
+        ;;
+      --supports-function-calling)
+        model_supports_function_calling=1
+        shift
         ;;
       --models)
         key_models="$2"
@@ -304,7 +312,7 @@ do_add_model() {
   [ -f "$CONFIG_FILE" ] || exiterr "Config file not found at ${CONFIG_FILE}. Has the container fully started?"
 
   CONFIG_FILE="$CONFIG_FILE" _MN="$model_alias" _P="$model_provider" \
-  _AK="${model_key:-}" _AB="${model_base_url:-}" \
+  _AK="${model_key:-}" _AB="${model_base_url:-}" _SFC="$model_supports_function_calling" \
   python3 - << 'PYEOF' || exiterr "Failed to update ${CONFIG_FILE}."
 import yaml, uuid, os, sys
 cfg = os.environ.get('CONFIG_FILE', '/etc/litellm/config.yaml')
@@ -323,6 +331,8 @@ if os.environ.get('_AK'):
     entry['litellm_params']['api_key'] = os.environ['_AK']
 if os.environ.get('_AB'):
     entry['litellm_params']['api_base'] = os.environ['_AB']
+if os.environ.get('_SFC') == '1':
+    entry['model_info']['supports_function_calling'] = True
 config.setdefault('model_list', []).append(entry)
 with open(cfg, 'w') as f:
     yaml.safe_dump(config, f, default_flow_style=False, allow_unicode=True)
