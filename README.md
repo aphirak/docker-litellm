@@ -128,7 +128,7 @@ This Docker image uses the following variables, that can be declared in an `env`
 | `LITELLM_ANTHROPIC_API_KEY` | Anthropic API key — auto-adds `claude-3-6-sonnet` (latest) | *(not set)* |
 | `LITELLM_GROQ_API_KEY` | Groq API key — auto-adds `llama-3.3-70b` | *(not set)* |
 | `LITELLM_GEMINI_API_KEY` | Google Gemini API key — auto-adds `gemini-2.0-flash` | *(not set)* |
-| `LITELLM_OLLAMA_BASE_URL` | Ollama base URL — auto-adds `ollama/llama3.2:3b` | *(not set)* |
+| `LITELLM_OLLAMA_BASE_URL` | Ollama base URL — ensures `ollama/llama3.2:3b` and `ollama-chat/llama3.2:3b` | *(not set)* |
 | `LITELLM_OLLAMA_API_KEY` | Ollama API key (auto-read from shared volume in [self-hosted-ai-stack](https://github.com/hwdsl2/self-hosted-ai-stack)) | *(not set)* |
 | `LITELLM_DATABASE_URL` | PostgreSQL URL — enables virtual key management | *(not set)* |
 | `LITELLM_POSTGRES_PASSWORD_FILE` | File containing the Compose Postgres password; used only when `LITELLM_DATABASE_URL` is not set | *(not set)* |
@@ -159,6 +159,8 @@ Use `docker exec` to manage models with the `litellm_manage` helper script. Mode
 
 **Note:** `--addmodel` and `--removemodel` write to `config.yaml` and automatically restart the proxy to apply the change.
 
+When `LITELLM_OLLAMA_BASE_URL` is set, the container keeps both default Ollama aliases in `config.yaml`: `ollama/llama3.2:3b` for backward compatibility and `ollama-chat/llama3.2:3b` for chat-native Ollama behavior. Use the `ollama-chat/...` alias for streaming tool calls.
+
 **List configured models:**
 
 ```bash
@@ -179,6 +181,13 @@ docker exec litellm litellm_manage --addmodel groq/llama-3.3-70b-versatile --key
 
 # Add with a custom display name (alias)
 docker exec litellm litellm_manage --addmodel openai/gpt-4o --key sk-... --alias my-gpt4
+
+# Mark a model as function-calling capable
+docker exec litellm litellm_manage \
+  --addmodel ollama_chat/llama3.2:3b \
+  --alias ollama-chat/llama3.2:3b \
+  --base-url http://host.docker.internal:11434 \
+  --supports-function-calling
 ```
 
 **Add a local Ollama model:**
@@ -189,6 +198,8 @@ docker exec litellm litellm_manage \
   --addmodel ollama/llama3.2:3b \
   --base-url http://host.docker.internal:11434
 ```
+
+For Ollama models that need native chat behavior or streaming tool calls, use the `ollama_chat/...` provider model with a user-facing alias such as `ollama-chat/llama3.2:3b`.
 
 **Remove a model** (use the `id` field from `--listmodels`):
 

@@ -126,7 +126,7 @@ docker image tag quay.io/hwdsl2/litellm-server hwdsl2/litellm-server
 | `LITELLM_ANTHROPIC_API_KEY` | API-ключ Anthropic — автодобавляет `claude-3-6-sonnet` (latest) | *(не задано)* |
 | `LITELLM_GROQ_API_KEY` | API-ключ Groq — автодобавляет `llama-3.3-70b` | *(не задано)* |
 | `LITELLM_GEMINI_API_KEY` | API-ключ Google Gemini — автодобавляет `gemini-2.0-flash` | *(не задано)* |
-| `LITELLM_OLLAMA_BASE_URL` | Базовый URL Ollama — автодобавляет `ollama/llama3.2:3b` | *(не задано)* |
+| `LITELLM_OLLAMA_BASE_URL` | Базовый URL Ollama — гарантирует наличие `ollama/llama3.2:3b` и `ollama-chat/llama3.2:3b` | *(не задано)* |
 | `LITELLM_OLLAMA_API_KEY` | API-ключ Ollama (автоматически считывается из общего тома в [self-hosted-ai-stack](https://github.com/hwdsl2/self-hosted-ai-stack/blob/main/README-ru.md)) | *(не задано)* |
 | `LITELLM_DATABASE_URL` | URL PostgreSQL — включает управление виртуальными ключами | *(не задано)* |
 | `LITELLM_POSTGRES_PASSWORD_FILE` | Файл с паролем PostgreSQL для Compose; используется только если `LITELLM_DATABASE_URL` не задан | *(не задано)* |
@@ -157,6 +157,8 @@ docker run \
 
 **Примечание:** `--addmodel` и `--removemodel` записывают изменения в `config.yaml` и автоматически перезапускают прокси для их применения.
 
+Если задан `LITELLM_OLLAMA_BASE_URL`, контейнер поддерживает в `config.yaml` два стандартных псевдонима Ollama: `ollama/llama3.2:3b` для обратной совместимости и `ollama-chat/llama3.2:3b` для нативного chat-поведения Ollama. Для потоковых вызовов инструментов используйте псевдоним `ollama-chat/...`.
+
 **Список настроенных моделей:**
 
 ```bash
@@ -177,6 +179,13 @@ docker exec litellm litellm_manage --addmodel groq/llama-3.3-70b-versatile --key
 
 # Добавить с пользовательским отображаемым именем (псевдоним)
 docker exec litellm litellm_manage --addmodel openai/gpt-4o --key sk-... --alias my-gpt4
+
+# Отметить модель как поддерживающую function calling
+docker exec litellm litellm_manage \
+  --addmodel ollama_chat/llama3.2:3b \
+  --alias ollama-chat/llama3.2:3b \
+  --base-url http://host.docker.internal:11434 \
+  --supports-function-calling
 ```
 
 **Добавление локальной модели Ollama:**
@@ -187,6 +196,8 @@ docker exec litellm litellm_manage \
   --addmodel ollama/llama3.2:3b \
   --base-url http://host.docker.internal:11434
 ```
+
+Для моделей Ollama, которым требуется нативное chat-поведение или потоковые вызовы инструментов, используйте provider model `ollama_chat/...` с пользовательским псевдонимом, например `ollama-chat/llama3.2:3b`.
 
 **Удаление модели** (используйте поле `id` из вывода `--listmodels`):
 
