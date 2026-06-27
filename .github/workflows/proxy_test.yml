@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-24.04
     if: github.repository_owner == 'hwdsl2'
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
       - name: Validate compose file
@@ -43,7 +43,7 @@ jobs:
     env:
       TEST_ID: ${{ matrix.test_id }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
       - name: Test
